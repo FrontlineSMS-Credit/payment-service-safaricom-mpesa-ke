@@ -31,7 +31,7 @@ public class BalanceDispatcher {
 				if (message.getEndpointId()!=null){
 					for(Iterator<MpesaPaymentService> psIterator = queue.iterator(); psIterator.hasNext(); ) {
 						ps = psIterator.next();
-						if (message.getEndpointId().equals(ps.getSettings().getPsSmsModemSerial())){
+						if (message.getEndpointId().equals(ps.getSettings().getId())){
 							ps.finaliseBalanceProcessing(message);
 							addToIgnoredBalanceMessageList(message);
 							queue.remove(ps);

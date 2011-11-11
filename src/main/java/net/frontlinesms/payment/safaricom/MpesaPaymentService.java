@@ -6,8 +6,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
+import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentServiceException;
 import net.frontlinesms.payment.PaymentStatus;
@@ -128,7 +130,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 								throw new RuntimeException("amount rejected");
 							}
 								final StkResponse enterPinResponse = cService.stkRequest(
-										((StkValuePrompt) enterAmountResponse).getRequest(), pin);
+										((StkValuePrompt) enterAmountResponse).getRequest(), getPin());
 							if (!(enterPinResponse instanceof StkConfirmationPrompt)) {
 								logMessageDao.saveLogMessage(LogMessage.error(
 										"PIN rejected", ""));
@@ -188,7 +190,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 
 	public void checkBalance() throws PaymentServiceException {
-		final String pin = this.pin;
+		final String pin = getPin();
 		final CService cService = this.cService;
 		queueRequestJob(new PaymentJob() {
 			public void run() {
@@ -388,16 +390,16 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	private void performPaymentReversalFraudCheck(String confirmationCode, BigDecimal amountPaid, BigDecimal actualBalance, final FrontlineMessage message) {
-		BigDecimal expectedBalance = balance.getBalanceAmount().subtract(amountPaid);
-		
-		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
-		
-		balance.setBalanceAmount(actualBalance);
-		balance.setBalanceUpdateMethod("PaymentReversal");
-		balance.setDateTime(new Date());
-		balance.setConfirmationCode(confirmationCode);
-		
-		balance.updateBalance();
+//		BigDecimal expectedBalance = balance.getBalanceAmount().subtract(amountPaid);
+//		
+//		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
+//		
+//		balance.setBalanceAmount(actualBalance);
+//		balance.setBalanceUpdateMethod("PaymentReversal");
+//		balance.setDateTime(new Date());
+//		balance.setConfirmationCode(confirmationCode);
+//		
+//		balance.updateBalance();
 
 	}
 
@@ -413,34 +415,25 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	synchronized void performBalanceEnquiryFraudCheck(final FrontlineMessage message) {
-		BigDecimal tempBalance = balance.getBalanceAmount();
+		BigDecimal tempBalance = getBalanceAmount();
 		BigDecimal expectedBalance = tempBalance.subtract(BD_BALANCE_ENQUIRY_CHARGE);
 		
 		BigDecimal actualBalance = getAmount(message);
 		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
 		
-		balance.setBalanceAmount(actualBalance);
-		balance.setConfirmationCode(getConfirmationCode(message));
-		balance.setDateTime(getTimePaid(message));
-		balance.setBalanceUpdateMethod("BalanceEnquiry");
-		balance.updateBalance();
+		updateBalance(actualBalance, getConfirmationCode(message), getTimePaid(message), "BalanceEnquiry");
 	}
 	
 	synchronized void performIncominPaymentFraudCheck(final FrontlineMessage message,
 			final IncomingPayment payment) {
 		//check is: Let Previous Balance be p, Current Balance be c and Amount received be a
 		final BigDecimal actualBalance = getBalance(message);
-		BigDecimal expectedBalance = payment.getAmountPaid().add(balance.getBalanceAmount());
+		BigDecimal expectedBalance = payment.getAmountPaid().add(getBalanceAmount());
 		
 		//c == p + a
 		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
 		
-		balance.setBalanceAmount(actualBalance);
-		balance.setConfirmationCode(payment.getConfirmationCode());
-		balance.setDateTime(new Date(payment.getTimePaid()));
-		balance.setBalanceUpdateMethod("IncomingPayment");
-		
-		balance.updateBalance();
+		updateBalance(actualBalance, payment.getConfirmationCode(), new Date(payment.getTimePaid()), "IncomingPayment");
 	}
 	
 	void informUserOfFraudIfCommitted(BigDecimal expectedBalance, BigDecimal actualBalance, String messageContent) {

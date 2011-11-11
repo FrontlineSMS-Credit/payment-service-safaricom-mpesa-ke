@@ -1,11 +1,15 @@
 package net.frontlinesms.payment.safaricom;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.frontlinesms.data.ConfigurableService;
+import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.FrontlineMessage;
+import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.data.events.EntitySavedNotification;
 import net.frontlinesms.data.repository.ContactDao;
 import net.frontlinesms.events.EventBus;
@@ -23,23 +27,63 @@ import org.creditsms.plugins.paymentview.PaymentViewPluginController;
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.LogMessage;
-import org.creditsms.plugins.paymentview.data.domain.PaymentServiceSettings;
 import org.creditsms.plugins.paymentview.data.repository.AccountDao;
 import org.creditsms.plugins.paymentview.data.repository.ClientDao;
 import org.creditsms.plugins.paymentview.data.repository.IncomingPaymentDao;
 import org.creditsms.plugins.paymentview.data.repository.LogMessageDao;
 import org.creditsms.plugins.paymentview.data.repository.OutgoingPaymentDao;
 import org.creditsms.plugins.paymentview.data.repository.TargetDao;
-import org.creditsms.plugins.paymentview.userhomepropeties.payment.balance.Balance;
-import org.creditsms.plugins.paymentview.userhomepropeties.payment.balance.BalanceProperties;
 import org.smslib.CService;
 import org.smslib.SMSLibDeviceException;
 import org.smslib.handler.ATHandler.SynchronizedWorkflow;
 
 public abstract class AbstractPaymentService implements PaymentService, EventObserver{
+//> PERSISTENT PROPERTIES
+	/** Prefix attached to every property name. */
+	private static final String PROPERTY_PREFIX = "payments.mpesa.";
+
+	protected static final String PROPERTY_PIN = PROPERTY_PREFIX + "pin";
+	private static final String PROPERTY_BALANCE_CONFIRMATION_CODE = PROPERTY_PREFIX + "balance.confirmation";
+	private static final String PROPERTY_BALANCE_AMOUNT = PROPERTY_PREFIX + "balance.amount";
+	private static final String PROPERTY_BALANCE_DATE_TIME = PROPERTY_PREFIX + "balance.timestamp";
+	private static final String PROPERTY_BALANCE_UPDATE_METHOD = PROPERTY_PREFIX + "balance.update.method";
+	private static final String PROPERTY_MODEM_SERIAL = PROPERTY_PREFIX + "modem.serial";
+	
+	public String getBalanceConfirmationCode() {
+		return getProperty(PROPERTY_BALANCE_CONFIRMATION_CODE, String.class);
+	}
+	public void setBalanceAmount(BigDecimal balanceAmount) {
+		setProperty(PROPERTY_BALANCE_AMOUNT, balanceAmount);
+	}
+	public BigDecimal getBalanceAmount() {
+		return getProperty(PROPERTY_BALANCE_AMOUNT, BigDecimal.class);
+	}
+	public void setBalanceConfirmationCode(String balanceConfirmationCode) {
+		setProperty(PROPERTY_BALANCE_CONFIRMATION_CODE, balanceConfirmationCode);
+	}
+	public Date getBalanceDateTime() {
+		return new Date(getProperty(PROPERTY_BALANCE_DATE_TIME, Long.class));
+	}
+	public void setBalanceDateTime(Date balanceDateTime) {
+		setProperty(PROPERTY_BALANCE_DATE_TIME, balanceDateTime.getTime());
+	}
+	public String getBalanceUpdateMethod() {
+		return getProperty(PROPERTY_BALANCE_UPDATE_METHOD, String.class);
+	}
+	public void setBalanceUpdateMethod(String balanceUpdateMethod) {
+		setProperty(PROPERTY_BALANCE_UPDATE_METHOD, balanceUpdateMethod);
+	}
+	public String getPsSmsModemSerial() {
+		return getProperty(PROPERTY_MODEM_SERIAL, String.class);
+	}
+	void updateBalance(BigDecimal amount, String confirmationCode, Date timestamp, String method) {
+		setBalanceAmount(amount);
+		setBalanceConfirmationCode(confirmationCode);
+		setBalanceDateTime(timestamp);
+		setBalanceUpdateMethod(method);
+	}
+	
 	protected CService cService;
-	protected String pin;
-	protected Balance balance;
 	protected EventBus eventBus;
 	protected PaymentJobProcessor requestJobProcessor;
 	protected PaymentJobProcessor responseJobProcessor;
@@ -50,16 +94,16 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected OutgoingPaymentDao outgoingPaymentDao;
 	protected LogMessageDao logMessageDao;
 	protected ContactDao contactDao;
-	private PaymentServiceSettings settings;
+	private PersistableSettings settings;
 	protected BalanceDispatcher balanceDispatcher;
 	
 	protected Logger pvLog = Logger.getLogger(this.getClass());
 	protected TargetAnalytics targetAnalytics;
 
-	public AbstractPaymentService() {
-		super();
+	public Class<? extends ConfigurableService> getSuperType() {
+		return PaymentService.class;
 	}
-
+	
 	public void startService() throws PaymentServiceException {
 		final CService cService = this.cService;
 		queueRequestJob(new PaymentJob() {
@@ -143,9 +187,23 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		requestJobProcessor.stop();
 		responseJobProcessor.stop();
 	}
+	
+	@SuppressWarnings("unchecked")
+	protected <T extends Object> T getProperty(String key, Class<T> clazz) {
+		return PersistableSettings.getPropertyValue(getPropertiesStructure(), settings, key, clazz);
+	}
+	
+	/**
+	 * Sets a property in {@link #settings}.
+	 * @param key
+	 * @param value
+	 */
+	protected void setProperty(String key, Object value) {
+		this.settings.set(key, value);
+	}
 
 	public String getPin() {
-		return pin;
+		return getProperty(PROPERTY_PIN, String.class);
 	}
 
 	public void registerToEventBus(final EventBus eventBus) {
@@ -156,37 +214,29 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	}
 
 	/** @return the settings attached to this instance. */
-	public PaymentServiceSettings getSettings() {
+	public PersistableSettings getSettings() {
 		return settings;
 	}
 
 	/**
 	 * Initialise the service using the supplied properties.
 	 */
-	public void initSettings(PaymentServiceSettings settings) {
+	public void initSettings(PersistableSettings settings) {
 		this.settings = settings;
 	}
 
 	public void setPin(final String pin) {
-		this.pin = pin;
+		setProperty(PROPERTY_PIN, pin);
 	}
 
 	public void setCService(final CService cService) {
 		this.cService = cService;
-	}
-
-	public void setBalance(Balance balance) {
-		this.balance = balance;
 	}
 	
 	public void setBalanceDispatcher(BalanceDispatcher balanceDispatcher) {
 		this.balanceDispatcher = balanceDispatcher;
 	}
 	
-	public Balance getBalance() {
-		return balance;
-	}
-
 	public void initDaosAndServices(final PaymentViewPluginController pluginController) {
 		this.accountDao = pluginController.getAccountDao();
 		this.clientDao = pluginController.getClientDao();
@@ -195,7 +245,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.incomingPaymentDao = pluginController.getIncomingPaymentDao();
 		this.targetAnalytics = pluginController.getTargetAnalytics();
 		this.logMessageDao = pluginController.getLogMessageDao();
-		if(this.balance == null) this.balance = BalanceProperties.getInstance().getBalance(this);
+//		if(this.getBalance() == null) setBalance(BalanceProperties.getInstance().getBalance(this));
 		if(this.balanceDispatcher == null) this.balanceDispatcher = BalanceDispatcher.getInstance();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
 		
@@ -203,7 +253,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 			pluginController.getUiGeneratorController().getFrontlineController().getEventBus()
 		);
 		
-		this.balance.setEventBus(this.eventBus);
+//		getBalance().setEventBus(this.eventBus);
 		this.pvLog = pluginController.getLogger(this.getClass());
 		
 		this.requestJobProcessor = new PaymentJobProcessor(this);
@@ -229,6 +279,21 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		if (eventBus != null){
 			eventBus.notifyObservers(new PaymentStatusEventNotification(sending));
 		}
+	}
+	
+	public void setSettings(PersistableSettings settings) {
+		this.settings = settings;
+	}
+
+	public StructuredProperties getPropertiesStructure() {
+		StructuredProperties p = new StructuredProperties();
+		p.put(PROPERTY_PIN, "");
+		p.put(PROPERTY_BALANCE_CONFIRMATION_CODE, "");
+		p.put(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
+		p.put(PROPERTY_BALANCE_DATE_TIME, 0L);
+		p.put(PROPERTY_BALANCE_UPDATE_METHOD, "");
+		p.put(PROPERTY_MODEM_SERIAL, "");
+		return p;
 	}
 	
 	abstract Date getTimePaid(FrontlineMessage message);

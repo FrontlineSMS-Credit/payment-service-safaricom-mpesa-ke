@@ -5,7 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+import net.frontlinesms.data.ConfigurableService;
+import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.FrontlineMessage;
+import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.payment.PaymentServiceException;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
@@ -92,5 +95,13 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	@Override
 	public String toString() {
 		return "M-PESA Kenya: Paybill Service";
+	}
+	
+	public StructuredProperties getPropertiesStructure() {
+		return super.getPropertiesStructure();
+	}
+	
+	public void setSettings(PersistableSettings settings) {
+		super.setSettings(settings);
 	}
 }

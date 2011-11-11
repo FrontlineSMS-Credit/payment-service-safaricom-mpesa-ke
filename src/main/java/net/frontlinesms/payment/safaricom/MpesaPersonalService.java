@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import net.frontlinesms.data.DuplicateKeyException;
+import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.FrontlineMessage;
+import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentServiceException;
 import net.frontlinesms.payment.PaymentStatus;
@@ -131,7 +133,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 								}
 								final StkResponse enterPinResponse = cService
 										.stkRequest(((StkValuePrompt) enterAmountResponse)
-														.getRequest(), pin);
+														.getRequest(), getPin());
 								if (!(enterPinResponse instanceof StkConfirmationPrompt)) {
 									logMessageDao.saveLogMessage(LogMessage.error(
 											"PIN rejected", ""));
@@ -206,7 +208,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	protected void processMessage(final FrontlineMessage message) {
 		if (message.getEndpointId() != null) {
-			if(this.getSettings().getPsSmsModemSerial().equals(message.getEndpointId())) {
+			if(getPsSmsModemSerial().equals(message.getEndpointId())) {
 				if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
 				} else if (isFailedMpesaPayment(message)) {
@@ -424,7 +426,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	synchronized void performOutgoingPaymentFraudCheck(
 			final FrontlineMessage message,
 			final OutgoingPayment outgoingPayment) {
-		BigDecimal tempBalanceAmount = balance.getBalanceAmount();
+		BigDecimal tempBalanceAmount = getBalanceAmount();
 
 		// check is: Let Previous Balance be p, Current Balance be c, Amount
 		// sent be a, and MPesa transaction fees f
@@ -447,12 +449,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		informUserOfFraudIfCommitted(expectedBalance, currentBalance,
 				message.getTextContent());
 
-		balance.setBalanceAmount(currentBalance);
-		balance.setConfirmationCode(outgoingPayment.getConfirmationCode());
-		balance.setDateTime(new Date(outgoingPayment.getTimeConfirmed()));
-		balance.setBalanceUpdateMethod("Outgoing Payment");
-
-		balance.updateBalance();
+		updateBalance(currentBalance, outgoingPayment.getConfirmationCode(),
+				new Date(outgoingPayment.getTimeConfirmed()), "Outgoing Payment");
 	}
 
 	private boolean isValidOutgoingPaymentConfirmation(FrontlineMessage message) {
@@ -537,5 +535,13 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	public String toString() {
 		return "M-PESA Kenya: Personal Service";
+	}
+	
+	public StructuredProperties getPropertiesStructure() {
+		return super.getPropertiesStructure();
+	}
+	
+	public void setSettings(PersistableSettings settings) {
+		super.setSettings(settings);
 	}
 }
