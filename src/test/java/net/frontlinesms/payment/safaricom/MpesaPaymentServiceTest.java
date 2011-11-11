@@ -105,7 +105,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		
 		PaymentServiceSettings paymentServiceSettings = mock(PaymentServiceSettings.class);
 		when(paymentServiceSettings.getPsSmsModemSerial()).thenReturn("093SH5S655");
-		mpesaPaymentService.setSettings(paymentServiceSettings);
+		mpesaPaymentService.initSettings(paymentServiceSettings);
 		
 		this.balance = new Balance();
 		balance.setBalanceAmount(new BigDecimal("200"));
@@ -140,7 +140,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected void tearDown() throws Exception {
 		super.tearDown();
 		
-		mpesaPaymentService.stop();
+		mpesaPaymentService.stopService();
 		
 		deinit();
 	}

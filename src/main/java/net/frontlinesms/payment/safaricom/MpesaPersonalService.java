@@ -13,6 +13,7 @@ import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentServiceException;
+import net.frontlinesms.payment.PaymentStatus;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.Client;
@@ -27,8 +28,7 @@ import org.smslib.stk.StkResponse;
 import org.smslib.stk.StkValuePrompt;
 
 public class MpesaPersonalService extends MpesaPaymentService {
-
-	// > REGEX PATTERN CONSTANTS
+//> REGEX PATTERN CONSTANTS
 	private static final String STR_PERSONAL_INCOMING_PAYMENT_REGEX_PATTERN = "[A-Z0-9]+ Confirmed.\n"
 			+ "You have received Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[\\d]{8}\non "
 			+ "(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) (at) ([1]?\\d:[0-5]\\d) (AM|PM)\n"
@@ -71,7 +71,11 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	private static final Pattern BALANCE_REGEX_PATTERN = Pattern
 			.compile(STR_BALANCE_REGEX_PATTERN);
 	
-	// > INSTANCE METHODS
+//> INSTANCE METHODS
+	public boolean isOutgoingPaymentEnabled() {
+		return true;
+	}
+	
 	public void makePayment(final Client client,
 			final OutgoingPayment outgoingPayment)
 			throws PaymentServiceException {
@@ -85,7 +89,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 								IOException {
 
 							initIfRequired();
-							updateStatus(Status.SENDING);
+							updateStatus(PaymentStatus.SENDING);
 							final StkMenu mPesaMenu = getMpesaMenu();
 							final StkResponse sendMoneyResponse = cService
 									.stkRequest(mPesaMenu.getRequest("Send money"));
@@ -109,7 +113,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 	
 										outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-										updateStatus(Status.ERROR);
+										updateStatus(PaymentStatus.ERROR);
 									throw new RuntimeException(
 											"Phone number rejected");
 								}
@@ -122,7 +126,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 									logMessageDao.saveLogMessage(LogMessage.error("amount rejected", ""));
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-									updateStatus(Status.ERROR);
+									updateStatus(PaymentStatus.ERROR);
 									throw new RuntimeException("amount rejected");
 								}
 								final StkResponse enterPinResponse = cService
@@ -133,7 +137,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 											"PIN rejected", ""));
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-									updateStatus(Status.ERROR);
+									updateStatus(PaymentStatus.ERROR);
 									throw new RuntimeException("PIN rejected");
 								}
 								final StkResponse confirmationResponse = cService
@@ -144,7 +148,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 											"Payment failed for some reason.", ""));
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-									updateStatus(Status.ERROR);
+									updateStatus(PaymentStatus.ERROR);
 									throw new RuntimeException(
 											"Payment failed for some reason.");
 								}
@@ -155,10 +159,10 @@ public class MpesaPersonalService extends MpesaPaymentService {
 												.toStringForLogs()));
 	
 								outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-								updateStatus(Status.COMPLETE);
+								updateStatus(PaymentStatus.COMPLETE);
 							} catch (DuplicateKeyException e) {
 								// TODO Auto-generated catch block
-								updateStatus(Status.ERROR);
+								updateStatus(PaymentStatus.ERROR);
 								e.printStackTrace();
 							}
 							return null;
@@ -456,7 +460,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 				message.getTextContent()).matches();
 	}
 
-	// >END - OUTGOING PAYMENT REGION
+//>END - OUTGOING PAYMENT REGION
 
 	/*
 	 * This function returns the active non-generic account, or the generic

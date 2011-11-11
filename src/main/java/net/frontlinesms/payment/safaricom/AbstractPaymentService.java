@@ -15,6 +15,8 @@ import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentJobProcessor;
 import net.frontlinesms.payment.PaymentService;
 import net.frontlinesms.payment.PaymentServiceException;
+import net.frontlinesms.payment.PaymentStatus;
+import net.frontlinesms.payment.event.PaymentStatusEventNotification;
 
 import org.apache.log4j.Logger;
 import org.creditsms.plugins.paymentview.PaymentViewPluginController;
@@ -57,43 +59,17 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public AbstractPaymentService() {
 		super();
 	}
-	
-	public enum Status {
-		SENDING("Sending payment(s) ..."),
-		COMPLETE("Payment Process completed."),
-		RECEIVING("Processing Incoming Payment ..."),
-		PROCESSED("New Incoming Payment has been received."),
-		CHECK_BALANCE("Checking Balance ..."),
-		CHECK_COMPLETE("Check Balance Complete."),
-		CONFIGURE_STARTED("Configuring Modem ..."),
-		CONFIGURE_COMPLETE("Modem Configuration Complete."),
-		PAYMENTSERVICE_OFF("Payment Service Not Setup."),
-		PAYMENTSERVICE_ON("Payment Service is Set Up."),
-		
-		ERROR("Error occurred.");
-		
-		private final String statusMessage;
 
-		Status(String statusMessage){
-			this.statusMessage = statusMessage;
-		}
-		
-		@Override
-		public String toString() {
-			return statusMessage;
-		}
-	}
-
-	public void configureModem() throws PaymentServiceException {
+	public void startService() throws PaymentServiceException {
 		final CService cService = this.cService;
 		queueRequestJob(new PaymentJob() {
 			public void run() {
 				try{
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException, IOException {
-							updateStatus(Status.CONFIGURE_STARTED);
+							updateStatus(PaymentStatus.CONFIGURE_STARTED);
 							cService.getAtHandler().configureModem();
-							updateStatus(Status.CONFIGURE_COMPLETE);
+							updateStatus(PaymentStatus.CONFIGURE_COMPLETE);
 							return null;
 						}
 					});
@@ -101,15 +77,15 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 					logMessageDao.saveLogMessage(LogMessage.error(
 							"SMSLibDeviceException in configureModem()",
 							ex.getMessage()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 				} catch (final IOException e) {
 					logMessageDao.saveLogMessage(LogMessage.error(
 							"IOException in configureModem()", e.getMessage()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 				} catch (RuntimeException e) {
 					logMessageDao.saveLogMessage(LogMessage.error(
 							"configureModem failed for some reason.", e.getMessage()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 				}
 			}
 		});
@@ -162,7 +138,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 				this.cService.getAtHandler().stkInit();
 			}
 
-	public void stop() {
+	public void stopService() {
 		eventBus.unregisterObserver(this);
 		requestJobProcessor.stop();
 		responseJobProcessor.stop();
@@ -187,7 +163,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	/**
 	 * Initialise the service using the supplied properties.
 	 */
-	public void setSettings(PaymentServiceSettings settings) {
+	public void initSettings(PaymentServiceSettings settings) {
 		this.settings = settings;
 	}
 
@@ -249,20 +225,9 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		return cService;
 	}
 	
-	public void updateStatus(Status sending) {
+	public void updateStatus(PaymentStatus sending) {
 		if (eventBus != null){
 			eventBus.notifyObservers(new PaymentStatusEventNotification(sending));
-		}
-	}
-	
-	public static class PaymentStatusEventNotification implements FrontlineEventNotification {
-		private final Status status;
-		public PaymentStatusEventNotification(Status status) {
-			this.status = status;
-		}
-
-		public Status getPaymentStatus() {
-			return status;
 		}
 	}
 	
@@ -271,10 +236,4 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	abstract Account getAccount(FrontlineMessage message);
 	abstract String getPaymentBy(FrontlineMessage message);
 	protected abstract boolean isValidBalanceMessage(FrontlineMessage message);
-	
-	public class BalanceFraudNotification implements FrontlineEventNotification{
-		private final String message;
-		public BalanceFraudNotification(String message){this.message=message;}
-		public String getMessage(){return message;}
-	}
 }

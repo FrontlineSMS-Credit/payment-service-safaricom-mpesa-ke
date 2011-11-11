@@ -10,6 +10,8 @@ import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentServiceException;
+import net.frontlinesms.payment.PaymentStatus;
+import net.frontlinesms.payment.event.BalanceFraudNotification;
 
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
@@ -28,7 +30,7 @@ import org.smslib.stk.StkRequest;
 import org.smslib.stk.StkResponse;
 import org.smslib.stk.StkValuePrompt;
 
-public abstract class MpesaPaymentService extends AbstractPaymentService   {
+public abstract class MpesaPaymentService extends AbstractPaymentService {
 //> REGEX PATTERN CONSTANTS
 	protected static final String AMOUNT_PATTERN = "Ksh[,|.|\\d]+";
 	protected static final String AMOUNT_PATTERN_WITHOUT_DOT = "Ksh[,\\d]+";
@@ -194,14 +196,14 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException, IOException {
 							initIfRequired();
-							updateStatus(Status.CHECK_BALANCE);
+							updateStatus(PaymentStatus.CHECK_BALANCE);
 							final StkMenu mPesaMenu = getMpesaMenu();
 							final StkMenu myAccountMenu = (StkMenu) cService.stkRequest(mPesaMenu.getRequest("My account"));
 							final StkResponse getBalanceResponse = cService.stkRequest(myAccountMenu.getRequest("Show balance"));
 							
 							final StkResponse enterPinResponse = cService.stkRequest(((StkValuePrompt) getBalanceResponse).getRequest(), pin);
 							if(enterPinResponse == StkResponse.ERROR) throw new RuntimeException("PIN rejected");
-							updateStatus(Status.CHECK_COMPLETE);
+							updateStatus(PaymentStatus.CHECK_COMPLETE);
 							BalanceDispatcher.getInstance().queuePaymentService(MpesaPaymentService.this);
 							return null;
 						}
@@ -212,15 +214,15 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 					logMessageDao.saveLogMessage(LogMessage.error(
 							"SMSLibDeviceException in checkBalance()",
 							ex.getMessage()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 				} catch (final IOException e) {
 					logMessageDao.saveLogMessage(LogMessage.error(
 							"IOException in checkBalance()", e.getMessage()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 				} catch (RuntimeException e) {
 					logMessageDao.saveLogMessage(LogMessage.error(
 							"checkBalance failed for some reason.", e.getMessage()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 				}
 			}
 		});
@@ -234,7 +236,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 					final IncomingPayment payment = new IncomingPayment();
 					// retrieve applicable account if the client exists
 					Account account = getAccount(message);
-					updateStatus(Status.RECEIVING);
+					updateStatus(PaymentStatus.RECEIVING);
 					if (account != null){
 						final Target tgt = targetDao.getActiveTargetByAccount(account.getAccountNumber());
 						if (tgt != null){//account is a non generic one
@@ -260,7 +262,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 								payment.getAccount().setActiveAccount(false);
 								accountDao.updateAccount(payment.getAccount());
 							}
-							updateStatus(Status.PROCESSED);
+							updateStatus(PaymentStatus.PROCESSED);
 						} else {
 							//account is a generic one(standard) or a non-generic without any active target(paybill)
 							payment.setAccount(account);
@@ -275,11 +277,11 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 							performIncominPaymentFraudCheck(message, payment);
 							
 							incomingPaymentDao.saveIncomingPayment(payment);
-							updateStatus(Status.PROCESSED);
+							updateStatus(PaymentStatus.PROCESSED);
 						}
 					} else {
 						// paybill - account does not exist (typing error) but client exists
-						if (clientDao.getClientByPhoneNumber(getPhoneNumber(message))!=null){
+						if (clientDao.getClientByPhoneNumber(getPhoneNumber(message))!=null) {
 							//save the incoming payment in generic account
 							account = accountDao.getGenericAccountsByClientId(clientDao.getClientByPhoneNumber(getPhoneNumber(message)).getId());
 							pvLog.warn("The account does not exist for this client. Incoming payment has been saved in generic account. "+ message.getTextContent());
@@ -303,7 +305,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 							contactDao.saveContact(contact);
 							//Finish save
 							
-							account = new Account(createAccountNumber(),client,false,true);
+							account = new Account(accountDao.createAccountNumber(), client, false, true);
 							accountDao.saveAccount(account);
 						}
 						
@@ -318,7 +320,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 						
 						performIncominPaymentFraudCheck(message, payment);
 						incomingPaymentDao.saveIncomingPayment(payment);
-						updateStatus(Status.PROCESSED);
+						updateStatus(PaymentStatus.PROCESSED);
 					}
 					
 					//log the saved incoming payment
@@ -332,7 +334,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 										   	"Incoming Payment: Message failed to parse; likely incorrect format",
 										   	 message.getTextContent()));
 					pvLog.warn("Message failed to parse; likely incorrect format", ex);
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 					throw new RuntimeException(ex);
 				} catch (final Exception ex) {
 					pvLog.error("Unexpected exception parsing incoming payment SMS.", ex);
@@ -340,7 +342,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 							new LogMessage(LogMessage.LogLevel.ERROR,
 								   	"Incoming Payment: Unexpected exception parsing incoming payment SMS",
 								   	message.getTextContent()));
-					updateStatus(Status.ERROR);
+					updateStatus(PaymentStatus.ERROR);
 					throw new RuntimeException(ex);
 				}
 			}
@@ -521,18 +523,5 @@ public abstract class MpesaPaymentService extends AbstractPaymentService   {
 		} else {
 			throw new SMSLibDeviceException("StkResponse Error Returned.");
 		}
-	}
-
-	/**
-	 * 
-	 * @return a generic account number
-	 */
-	public String createAccountNumber(){
-		int accountNumberGenerated = this.accountDao.getAccountCount()+1;
-		String accountNumberGeneratedStr = String.format("%05d", accountNumberGenerated);
-		while (this.accountDao.getAccountByAccountNumber(accountNumberGeneratedStr) != null){
-			accountNumberGeneratedStr = String.format("%05d", ++ accountNumberGenerated);
-		}
-		return accountNumberGeneratedStr;
 	}
 }

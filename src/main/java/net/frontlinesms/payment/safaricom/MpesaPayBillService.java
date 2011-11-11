@@ -31,6 +31,10 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	
 	private static final Pattern BALANCE_REGEX_PATTERN = Pattern.compile(STR_BALANCE_REGEX_PATTERN);
 	
+	public boolean isOutgoingPaymentEnabled() {
+		return false;
+	}
+	
 	@Override
 	protected boolean isValidBalanceMessage(FrontlineMessage message){
 		return BALANCE_REGEX_PATTERN.matcher(message.getTextContent()).matches();
