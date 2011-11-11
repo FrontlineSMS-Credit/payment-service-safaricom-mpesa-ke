@@ -1,0 +1,18 @@
+# Excluded files
+.idea
+
+# The maven "target" directory - a temporary directory used in Maven builds
+target/
+
+# Eclipse files and directories
+bin/
+.classpath
+.project
+.settings/
+
+# Temporary working files and directory
+temp/
+/izpack-build.xml
+/izpack-build.xml
+*.orig
+*.save

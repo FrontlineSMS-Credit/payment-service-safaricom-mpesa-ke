@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>net.frontlinesms.plugins.credit.payment</groupId>
+	<artifactId>safaricom-kenya</artifactId>
+	<name>FrontlineSMS Safaricom Kenya PaymentService</name>
+	<version>0.1.0-SNAPSHOT</version>
+	<description>PaymentService implementation for FrontlineSMS:Credit for Safaricom Kenya.</description>
+	<parent>
+		<groupId>net.frontlinesms.core</groupId>
+		<artifactId>frontlinesms-pom-parent</artifactId>
+		<version>1.7.00-beta-7-SNAPSHOT</version>
+		<relativePath>../pom-parent</relativePath>
+	</parent>
+	<scm>
+		<developerConnection>scm:git:git@github.com:${github.projectOwner}/${github.projectName}.git</developerConnection>
+	</scm>
+	<distributionManagement>
+		<repository>
+			<id>frontlinesms.repo</id>
+			<name>FrontlineSMS Maven repository</name>
+			<url>ftp://dev.frontlinesms.com</url>
+		</repository>		
+	</distributionManagement>
+	
+	<dependencies>
+		<dependency>
+			<groupId>net.frontlinesms.plugins.credit</groupId>
+			<artifactId>frontlinesms-plugin-credit</artifactId>
+			<version>0.01.5-SNAPSHOT</version>
+		</dependency>
+	    <dependency>
+			<groupId>net.frontlinesms.core</groupId>
+			<artifactId>frontlinesms-test</artifactId>
+			<version>0.01.02-SNAPSHOT</version>
+			<scope>test</scope>
+	    </dependency>
+	</dependencies>
+</project>
