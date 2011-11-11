@@ -6,10 +6,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
 
-import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
-import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentServiceException;
 import net.frontlinesms.payment.PaymentStatus;

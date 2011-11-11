@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.frontlinesms.data.ConfigurableService;
-import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.data.events.EntitySavedNotification;
@@ -21,6 +19,8 @@ import net.frontlinesms.payment.PaymentService;
 import net.frontlinesms.payment.PaymentServiceException;
 import net.frontlinesms.payment.PaymentStatus;
 import net.frontlinesms.payment.event.PaymentStatusEventNotification;
+import net.frontlinesms.serviceconfig.ConfigurableService;
+import net.frontlinesms.serviceconfig.StructuredProperties;
 
 import org.apache.log4j.Logger;
 import org.creditsms.plugins.paymentview.PaymentViewPluginController;
@@ -40,7 +40,7 @@ import org.smslib.handler.ATHandler.SynchronizedWorkflow;
 public abstract class AbstractPaymentService implements PaymentService, EventObserver{
 //> PERSISTENT PROPERTIES
 	/** Prefix attached to every property name. */
-	private static final String PROPERTY_PREFIX = "payments.mpesa.";
+	private static final String PROPERTY_PREFIX = "plugins.payment.mpesa.";
 
 	protected static final String PROPERTY_PIN = PROPERTY_PREFIX + "pin";
 	private static final String PROPERTY_BALANCE_CONFIRMATION_CODE = PROPERTY_PREFIX + "balance.confirmation";

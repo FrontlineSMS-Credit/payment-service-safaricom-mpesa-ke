@@ -10,12 +10,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import net.frontlinesms.data.DuplicateKeyException;
-import net.frontlinesms.data.StructuredProperties;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.payment.PaymentJob;
 import net.frontlinesms.payment.PaymentServiceException;
 import net.frontlinesms.payment.PaymentStatus;
+import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
+import net.frontlinesms.serviceconfig.StructuredProperties;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.Client;
@@ -29,6 +30,7 @@ import org.smslib.stk.StkMenu;
 import org.smslib.stk.StkResponse;
 import org.smslib.stk.StkValuePrompt;
 
+@ConfigurableServiceProperties(name="MPESA Kenya Personal", icon="/icons/mpesa_ke_personal.png")
 public class MpesaPersonalService extends MpesaPaymentService {
 //> REGEX PATTERN CONSTANTS
 	private static final String STR_PERSONAL_INCOMING_PAYMENT_REGEX_PATTERN = "[A-Z0-9]+ Confirmed.\n"
