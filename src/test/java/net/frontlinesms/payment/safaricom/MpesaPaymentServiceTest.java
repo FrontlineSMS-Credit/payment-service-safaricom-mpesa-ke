@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -91,7 +92,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected E mpesaPaymentService;
 	protected Logger logger;
 	private PaymentViewPluginController pluginController;
-	protected BalanceDispatcher balanceDispatcher;
+//	protected BalanceDispatcher balanceDispatcher;
 	
 	@Override
 	protected void setUp() throws Exception {
@@ -112,7 +113,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				AbstractPaymentService.PROPERTY_BALANCE_CONFIRMATION_CODE, "7HHSK457S",
 				AbstractPaymentService.PROPERTY_BALANCE_DATE_TIME, System.currentTimeMillis()));
 		
-		this.balanceDispatcher = BalanceDispatcher.getInstance();
+//		this.balanceDispatcher = BalanceDispatcher.getInstance();
 
 		
 		setUpDaos();
@@ -132,11 +133,16 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	
 	private PersistableSettings mockSettings(Object... settingsAndValues) {
 		assert((settingsAndValues.length & 1) == 0): "Should be an equal number of setting keys and value";
-		PersistableSettings s = mock(PersistableSettings.class);
+//		PersistableSettings s = mock(PersistableSettings.class);
+		PersistableSettings s = new PersistableSettings(mpesaPaymentService);
 		for(int i=0; i<settingsAndValues.length; i+=2) {
-			when(s.get((String) settingsAndValues[i]))
-					.thenReturn(PersistableSettingValue.create(settingsAndValues[i+1]));
+			String key = (String) settingsAndValues[i];
+			Object value = settingsAndValues[i+1];
+			s.set(key, value);
+//			when(s.get(key))
+//					.thenReturn(PersistableSettingValue.create(value));
 		}
+		
 		return s;
 	}
 	
@@ -253,7 +259,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		// when
 		mpesaPaymentService.checkBalance();
 		
-		WaitingRequestJob.waitForEvent(mpesaPaymentService);
+		waitForRequestJob();
 		
 		// then
 		InOrder inOrder = inOrder(cService);
@@ -284,7 +290,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		// when
 		mpesaPaymentService.makePayment(CLIENT_1, getOutgoingPayment(CLIENT_1));
 		
-		waitForEvent();
+		waitForRequestJob();
 		
 		// then
 		InOrder inOrder = inOrder(cService);
@@ -317,7 +323,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
 		
 		// then
-		waitForEvent();
+		waitForRequestJob();
 		
 		verify(incomingPaymentDao).getByConfirmationCode(reversedConfirmationCode);
 		verify(incomingPaymentDao).updateIncomingPayment(new IncomingPayment() {
@@ -357,7 +363,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		// when
 		mpesaPaymentService.sendAmountToPaybillAccount("ZUKU","320320","68949", new BigDecimal(100));
 		
-		waitForEvent();
+		waitForRequestJob();
 		
 		// then
 		InOrder inOrder = inOrder(cService);
@@ -376,7 +382,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		// when
 		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
 		
-		waitForEvent();
+		waitForResponseJob();
 		verify(incomingPaymentDao).saveIncomingPayment(new IncomingPayment() {
 			@Override
 			public boolean equals(Object that) {
@@ -398,12 +404,8 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 			final String phoneNo, final String accountNumber, final String amount,
 			final String confirmationCode, final String payTo, final String datetime, 
 			final OutgoingPayment.Status status) throws DuplicateKeyException {
-		// then
+		// setup
 		assertTrue(mpesaPaymentService instanceof EventObserver);
-		
-		// when
-		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
-		
 		OutgoingPayment payment = new OutgoingPayment();
 //		Set<Account> myAccounts = mockAccounts(accountNumber);
 //		Client myClient = mockClient(1, phoneNo, myAccounts);
@@ -414,18 +416,30 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		payment.setTimeConfirmed(getTimestamp(datetime).getTime());
 		payment.setStatus(status);
 		payment.setPaymentServiceSettings(mpesaPaymentService.getSettings());
+		when(outgoingPaymentDao.getByPhoneNumberAndAmountPaid(phoneNo, new BigDecimal(amount), status)).
+				thenReturn(Arrays.asList(payment));
+		
+		// when
+		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
 		
 		// then
-		waitForEvent();
+		waitForResponseJob();
 		verify(outgoingPaymentDao).updateOutgoingPayment(payment);
 	}
 	
 	protected void testBalanceProcessing(String messageText, String amount,
-			String confimation_message, String date_time) {
-		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
+			String confirmationMessage, String timestamp) {
+		FrontlineMessage message = mockMessage("MPESA", messageText);
 		
-		waitForEvent();
-		assertEquals(mpesaPaymentService.getBalanceAmount(), new BigDecimal(amount));
+		assertTrue(mpesaPaymentService.isValidBalanceMessage(message));
+		
+		mpesaPaymentService.notify(new EntitySavedNotification<FrontlineMessage>(message));
+		
+		waitForRequestJob();
+		
+		assertEquals(new BigDecimal(amount), mpesaPaymentService.getBalanceAmount());
+		assertEquals(confirmationMessage, mpesaPaymentService.getBalanceConfirmationCode());
+		assertEquals(getTimestamp(timestamp), mpesaPaymentService.getBalanceDateTime());
 	}
 	
 	private Date getTimestamp(String dateString) {
@@ -446,7 +460,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		mpesaPaymentService.notify(mockMessageNotification(fromNumber, messageText));
 		
 		// then
-		waitForEvent();
+		waitForRequestJob();
 		verify(incomingPaymentDao, never()).saveIncomingPayment(any(IncomingPayment.class));
 	}
 	
@@ -484,7 +498,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		s.notify(mockMessageNotification(from, messageText));
 		
 		// then
-		waitForEvent();
+		waitForRequestJob();
 		verify(incomingPaymentDao, never()).saveIncomingPayment(any(IncomingPayment.class));
 	}
 	
@@ -515,11 +529,15 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	}
 	
 	private EntitySavedNotification<FrontlineMessage> mockMessageNotification(String from, String text) {
+		return new EntitySavedNotification<FrontlineMessage>(mockMessage(from, text));
+	}
+	
+	private FrontlineMessage mockMessage(String from, String text) {
 		FrontlineMessage m = mock(FrontlineMessage.class);
 		when(m.getSenderMsisdn()).thenReturn(from);
 		when(m.getTextContent()).thenReturn(text);
 		when(m.getEndpointId()).thenReturn("093SH5S655");
-		return new EntitySavedNotification<FrontlineMessage>(m);
+		return m;
 	}
 	
 	private OutgoingPayment getOutgoingPayment(Client client){
@@ -542,24 +560,29 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		}
 		return new HashSet<Account>(accounts);
 	}
-	
-	private void waitForEvent() {
-		WaitingRequestJob.waitForEvent(mpesaPaymentService);
+
+	private void waitForRequestJob() {
+		WaitingJob.waitForEvent(mpesaPaymentService, true);
+	}
+
+	private void waitForResponseJob() {
+		WaitingJob.waitForEvent(mpesaPaymentService, false);
 	}
 }
 
-class WaitingRequestJob implements PaymentJob {
+class WaitingJob implements PaymentJob {
 	private final MpesaPaymentService s;
 	private boolean running;
 	
-	private WaitingRequestJob(MpesaPaymentService s) {
+	private WaitingJob(MpesaPaymentService s) {
 		assert s != null: "Please set a payment service.";
 		this.s = s;
 	}
 	
-	private void block() {
+	private void block(boolean requestJob) {
 		running = true;
-		s.queueRequestJob(this);
+		if(requestJob) s.queueRequestJob(this);
+		else s.queueResponseJob(this);
 		while(running) {
 			try {
 				Thread.sleep(200);
@@ -574,7 +597,7 @@ class WaitingRequestJob implements PaymentJob {
 	}
 	
 	/** Put a job on the UI event queue, and block until it has been run. */
-	public static void waitForEvent(MpesaPaymentService s) {
-		new WaitingRequestJob(s).block();
+	public static void waitForEvent(MpesaPaymentService s, boolean requestJob) {
+		new WaitingJob(s).block(requestJob);
 	}
 }

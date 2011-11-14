@@ -26,7 +26,6 @@ import org.apache.log4j.Logger;
 import org.creditsms.plugins.paymentview.PaymentViewPluginController;
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
-import org.creditsms.plugins.paymentview.data.domain.LogMessage;
 import org.creditsms.plugins.paymentview.data.repository.AccountDao;
 import org.creditsms.plugins.paymentview.data.repository.ClientDao;
 import org.creditsms.plugins.paymentview.data.repository.IncomingPaymentDao;
@@ -95,7 +94,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected LogMessageDao logMessageDao;
 	protected ContactDao contactDao;
 	private PersistableSettings settings;
-	protected BalanceDispatcher balanceDispatcher;
+//	protected BalanceDispatcher balanceDispatcher;
 	
 	protected Logger pvLog = Logger.getLogger(this.getClass());
 	protected TargetAnalytics targetAnalytics;
@@ -117,18 +116,9 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 							return null;
 						}
 					});
-				} catch (final SMSLibDeviceException ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"SMSLibDeviceException in configureModem()",
-							ex.getMessage()));
-					updateStatus(PaymentStatus.ERROR);
-				} catch (final IOException e) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"IOException in configureModem()", e.getMessage()));
-					updateStatus(PaymentStatus.ERROR);
-				} catch (RuntimeException e) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"configureModem failed for some reason.", e.getMessage()));
+				} catch (Throwable t) {
+					t.printStackTrace();
+					logMessageDao.error(t.getClass().getSimpleName() + " in configureModem()", t);
 					updateStatus(PaymentStatus.ERROR);
 				}
 			}
@@ -137,17 +127,13 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 
 	@SuppressWarnings("rawtypes")
 	public void notify(final FrontlineEventNotification notification) {
-		if (!(notification instanceof EntitySavedNotification)) {
-			return;
+		if(notification instanceof EntitySavedNotification) {
+			final Object entity = ((EntitySavedNotification) notification).getDatabaseEntity();
+			if (entity instanceof FrontlineMessage) {
+				final FrontlineMessage message = (FrontlineMessage) entity;
+				processMessage(message);
+			}
 		}
-		
-		//And is of a saved message
-		final Object entity = ((EntitySavedNotification) notification).getDatabaseEntity();
-		if (!(entity instanceof FrontlineMessage)) {
-			return;
-		}
-		final FrontlineMessage message = (FrontlineMessage) entity;
-		processMessage(message);
 	}
 	
 	protected abstract void processMessage(final FrontlineMessage message);
@@ -232,9 +218,9 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.cService = cService;
 	}
 	
-	public void setBalanceDispatcher(BalanceDispatcher balanceDispatcher) {
-		this.balanceDispatcher = balanceDispatcher;
-	}
+//	public void setBalanceDispatcher(BalanceDispatcher balanceDispatcher) {
+//		this.balanceDispatcher = balanceDispatcher;
+//	}
 	
 	public void initDaosAndServices(final PaymentViewPluginController pluginController) {
 		this.accountDao = pluginController.getAccountDao();
@@ -245,7 +231,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.targetAnalytics = pluginController.getTargetAnalytics();
 		this.logMessageDao = pluginController.getLogMessageDao();
 //		if(this.getBalance() == null) setBalance(BalanceProperties.getInstance().getBalance(this));
-		if(this.balanceDispatcher == null) this.balanceDispatcher = BalanceDispatcher.getInstance();
+//		if(this.balanceDispatcher == null) this.balanceDispatcher = BalanceDispatcher.getInstance();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
 		
 		this.registerToEventBus(

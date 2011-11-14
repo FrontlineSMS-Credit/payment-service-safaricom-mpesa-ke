@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.regex.Pattern;
 
 import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
@@ -46,23 +45,21 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	private static final int BALANCE_ENQUIRY_CHARGE = 1;
 	private static final BigDecimal BD_BALANCE_ENQUIRY_CHARGE = new BigDecimal(BALANCE_ENQUIRY_CHARGE);
 	
-	private static final String STR_REVERSE_REGEX_PATTERN = 
-		"[A-Z0-9]+ Confirmed.\n"
-		+"Transaction [A-Z0-9]+\n"
-		+"has been reversed. Your\n"
-		+"account balance now\n"
-		+"[,|\\d]+Ksh";
+	private static final String REVERSE_REGEX = 
+			"[A-Z0-9]+ Confirmed.\n" +
+			"Transaction [A-Z0-9]+\n" +
+			"has been reversed. Your\n" +
+			"account balance now\n" +
+			"[,|\\d]+Ksh";
 
-	private static final Pattern REVERSE_REGEX_PATTERN = Pattern.compile(STR_REVERSE_REGEX_PATTERN);
-	
 //> INSTANCE PROPERTIES
 	protected void processMessage(final FrontlineMessage message) {
 		//I have overridden this function...
 		if (isValidIncomingPaymentConfirmation(message)) {
 			processIncomingPayment(message);
-		}else if (isValidBalanceMessage(message)){
+		} else if (isValidBalanceMessage(message)) {
 			processBalance(message);
-		}else if (isValidReverseMessage(message)){
+		} else if (isValidReverseMessage(message)) {
 			processReversePayment(message);
 		} else if (isInvalidPinMessage(message)) {
 			logMessageDao.saveLogMessage(LogMessage.error(
@@ -204,7 +201,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							final StkResponse enterPinResponse = cService.stkRequest(((StkValuePrompt) getBalanceResponse).getRequest(), pin);
 							if(enterPinResponse == StkResponse.ERROR) throw new RuntimeException("PIN rejected");
 							updateStatus(PaymentStatus.CHECK_COMPLETE);
-							BalanceDispatcher.getInstance().queuePaymentService(MpesaPaymentService.this);
+//							BalanceDispatcher.getInstance().queuePaymentService(MpesaPaymentService.this);
 							return null;
 						}
 					});
@@ -374,17 +371,13 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	protected void processBalance(final FrontlineMessage message){
-		balanceDispatcher.notify(message);
-	}
-	
-	void finaliseBalanceProcessing(final FrontlineMessage message) {
-		queueResponseJob(new PaymentJob() {
-			public void run() {
+//		queueResponseJob(new PaymentJob() {
+//			public void run() {
 				performBalanceEnquiryFraudCheck(message);
 				logMessageDao.saveLogMessage(
 						new LogMessage(LogMessage.LogLevel.INFO,"Check Balance Response",message.getEndpointId() + ": " + message.getTextContent()));
-			}
-		});
+//			}
+//		});
 	}
 	
 	private void performPaymentReversalFraudCheck(String confirmationCode, BigDecimal amountPaid, BigDecimal actualBalance, final FrontlineMessage message) {
@@ -467,7 +460,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	private boolean isValidReverseMessage(FrontlineMessage message) {
-		return REVERSE_REGEX_PATTERN.matcher(message.getTextContent()).matches();
+		return message.getTextContent().matches(REVERSE_REGEX);
 	}
 	
 	BigDecimal getAmount(final FrontlineMessage message) {

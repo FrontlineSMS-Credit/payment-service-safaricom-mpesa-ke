@@ -54,7 +54,7 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 				"Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM " +
 				"New M-PESA balance is Ksh1,000",
 				PHONENUMBER_1, ACCOUNTNUMBER_1_1, "1235", "BC77RI604",
-				"DACON OMONDI", "22/5/11 10:35 PM", OutgoingPayment.Status.CONFIRMED);
+				"DACON OMONDI", "22/5/11 10:35 PM", OutgoingPayment.Status.UNCONFIRMED);
 		
 		verify(logger).info("No Fraud occured!");
 		
@@ -77,7 +77,7 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 				"Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM " +
 				"New M-PESA balance is Ksh5,500",
 				PHONENUMBER_1, ACCOUNTNUMBER_1_1, "1235", "BC77RI604",
-				"DACON OMONDI", "22/5/11 10:35 PM", OutgoingPayment.Status.CONFIRMED);
+				"DACON OMONDI", "22/5/11 10:35 PM", OutgoingPayment.Status.UNCONFIRMED);
 		
 		verify(logger, never()).info("No Fraud occured!");
 	}
@@ -89,7 +89,7 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 				"Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM " +
 				"New M-PESA balance is Ksh1,000",
 				PHONENUMBER_1, ACCOUNTNUMBER_1_1, "1235", "BC77RI604",
-				"DACON OMONDI", "22/5/11 10:35 PM", OutgoingPayment.Status.CONFIRMED);
+				"DACON OMONDI", "22/5/11 10:35 PM", OutgoingPayment.Status.UNCONFIRMED);
 	}
 	
 	public void testIncomingPaymentProcessingWithNoAccount() {
@@ -123,9 +123,9 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 		mpesaPaymentService.setBalanceAmount(new BigDecimal("1235"));
 		
 		testBalanceProcessing("NB56GF6JK Confirmed.\n" +
-			"Your M-PESA balance was Ksh1,235\n" +
-			"on 12/2/11 at 12:23 AM",
-		"1235", "NB56GF6JK", "12/2/11 12:23 AM");
+						"Your M-PESA balance was Ksh1,235\n" +
+						"on 12/2/11 at 12:23 AM",
+				"1235", "NB56GF6JK", "12/2/11 12:23 AM");
 	}
 
 	@Override

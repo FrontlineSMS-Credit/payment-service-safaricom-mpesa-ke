@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
@@ -32,48 +31,28 @@ import org.smslib.stk.StkValuePrompt;
 
 @ConfigurableServiceProperties(name="MPESA Kenya Personal", icon="/icons/mpesa_ke_personal.png")
 public class MpesaPersonalService extends MpesaPaymentService {
-//> REGEX PATTERN CONSTANTS
-	private static final String STR_PERSONAL_INCOMING_PAYMENT_REGEX_PATTERN = "[A-Z0-9]+ Confirmed.\n"
-			+ "You have received Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[\\d]{8}\non "
-			+ "(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) (at) ([1]?\\d:[0-5]\\d) (AM|PM)\n"
-			+ "New M-PESA balance is Ksh[,|.|\\d]+";
-	private static final Pattern PERSONAL_INCOMING_PAYMENT_REGEX_PATTERN = Pattern
-			.compile(STR_PERSONAL_INCOMING_PAYMENT_REGEX_PATTERN);
-	
-	private static final String STR_SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX_PATTERN  = 
-		"Failed. M-PESA cannot send Ksh([,|.|\\d]+) to 2547[\\d]{8}. " +
-		"For more information call or SMS customer services on \\d{3}";
-	private static final Pattern SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX_PATTERN = Pattern
-	.compile(STR_SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX_PATTERN);
-	//Failed. M-PESA cannot send Ksh67,100.00 to 254704593656. For more information call or SMS customer services on 234.
-	
-	private static final String STR_PERSONAL_OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX_PATTERN  =
-		"Failed. \nNot enough money in your M-PESA account to send Ksh[,|.|\\d]+.00. " +
-		"You must be able to pay the transaction fee as well as the requested " +
-		"amount.\nYour M-PESA balance is Ksh[,|.|\\d]+.00";
-	
-	private static final Pattern PERSONAL_OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX_PATTERN = Pattern
-	.compile(STR_PERSONAL_OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX_PATTERN);
-	
-	private static final String STR_MPESA_PAYMENT_FAILURE_PATTERN = "";
-	private static final String STR_LESS_THAN_MINIMUM_AMOUNT = "Failed. The amount is less than minimum M-PESA money transfer value.";
-	private static final Pattern MPESA_PAYMENT_FAILURE_PATTERN = Pattern
-			.compile(STR_MPESA_PAYMENT_FAILURE_PATTERN);
-
-	private static final String STR_PERSONAL_OUTGOING_PAYMENT_REGEX_PATTERN = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ "
-		+ "sent to ([A-Za-z ]+) (\\+254[\\d]{9}|[\\d|-])+ "
-		+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )"
-		+ "New M-PESA balance is Ksh([,|.|\\d]+)";
-	
-	private static final Pattern PERSONAL_OUTGOING_PAYMENT_REGEX_PATTERN = Pattern
-			.compile(STR_PERSONAL_OUTGOING_PAYMENT_REGEX_PATTERN);
-	private static final String STR_BALANCE_REGEX_PATTERN = "[A-Z0-9]+ Confirmed.\n"
+//> MESSAGE CONTENT MATCHER CONSTANTS
+	private static final String INCOMING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed.\n" +
+			"You have received Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[\\d]{8}\non " +
+			"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) (at) ([1]?\\d:[0-5]\\d) (AM|PM)\n" +
+			"New M-PESA balance is Ksh[,|.|\\d]+";
+	/** example matching string: Failed. M-PESA cannot send Ksh67,100.00 to 254704593656. For more information call or SMS customer services on 234. */
+	private static final String SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX  = 
+			"Failed. M-PESA cannot send Ksh([,|.|\\d]+) to 2547[\\d]{8}. " +
+			"For more information call or SMS customer services on \\d{3}";
+	private static final String OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX  =
+			"Failed. \nNot enough money in your M-PESA account to send Ksh[,|.|\\d]+.00. " +
+			"You must be able to pay the transaction fee as well as the requested " +
+			"amount.\nYour M-PESA balance is Ksh[,|.|\\d]+.00";
+	private static final String MPESA_PAYMENT_FAILURE_REGEX = "";
+	private static final String LESS_THAN_MINIMUM_AMOUNT = "Failed. The amount is less than minimum M-PESA money transfer value.";
+	private static final String OUTGOING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ "
+			+ "sent to ([A-Za-z ]+) (\\+254[\\d]{9}|[\\d|-])+ "
+			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )"
+			+ "New M-PESA balance is Ksh([,|.|\\d]+)";
+	private static final String BALANCE_REGEX = "[A-Z0-9]+ Confirmed.\n"
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\n"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M))";
-
-	
-	private static final Pattern BALANCE_REGEX_PATTERN = Pattern
-			.compile(STR_BALANCE_REGEX_PATTERN);
 	
 //> INSTANCE METHODS
 	public boolean isOutgoingPaymentEnabled() {
@@ -203,8 +182,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	
 	@Override
 	protected boolean isValidBalanceMessage(FrontlineMessage message) {
-		return BALANCE_REGEX_PATTERN.matcher(message.getTextContent())
-				.matches();
+		return message.getTextContent().matches(BALANCE_REGEX);
 	}
 
 	@Override
@@ -217,8 +195,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					logMessageDao.saveLogMessage(new LogMessage(LogMessage.LogLevel.ERROR,"Payment Message: Failed message",message.getTextContent()));
 				} else if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
-				} else if (isBellowMinimumAmount(message)) {
-					reportBellowMinimumAmount();
+				} else if (isBelowMinimumAmount(message)) {
+					reportBelowMinimumAmount();
 				} else if (isSentToSameAccountMessage(message)) {	
 					reportSentToSameAccount(message);
 				} else if (isInsufficientFundsMessage(message)) {	
@@ -230,22 +208,21 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		}
 	}
 
-	private void reportBellowMinimumAmount() {
+	private void reportBelowMinimumAmount() {
 		logMessageDao.saveLogMessage(LogMessage.error(
 				"PAYMENT FAILED",
 				"Payment Failed. Payment was less than minimum amount."));
 	}
 	
-	private boolean isBellowMinimumAmount(final FrontlineMessage message) {
+	private boolean isBelowMinimumAmount(final FrontlineMessage message) {
 		if (!message.getSenderMsisdn().equals("MPESA")) {
 			return false;
 		}
-		return message.getTextContent().contains(STR_LESS_THAN_MINIMUM_AMOUNT);
+		return message.getTextContent().contains(LESS_THAN_MINIMUM_AMOUNT);
 	}
 	
 	private boolean isFailedMpesaPayment(final FrontlineMessage message) {
-		return MPESA_PAYMENT_FAILURE_PATTERN.matcher(message.getTextContent())
-				.matches();
+		return message.getTextContent().matches(MPESA_PAYMENT_FAILURE_REGEX);
 	}
 
 	private void reportInsufficientFunds(final FrontlineMessage message) {
@@ -364,61 +341,43 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					// Retrieve the corresponding outgoing payment with status
 					// UNCONFIRMED
 					List<OutgoingPayment> outgoingPayments;
-					if (getPhoneNumber(message).equals("")){
-						//Paybill
-						 outgoingPayments = outgoingPaymentDao
-							.getByAmountPaidForInactiveClient(
-									new BigDecimal(getAmount(message).toString()),
-									OutgoingPayment.Status.UNCONFIRMED);
-						 
+					String phoneNumber = getPhoneNumber(message);
+					BigDecimal amount = getAmount(message);
+					if (phoneNumber.equals("")) {
+						//Paybill FIXME what?  why is there any mention of paybill here?
+						outgoingPayments = outgoingPaymentDao.getByAmountPaidForInactiveClient(
+								amount, OutgoingPayment.Status.UNCONFIRMED);
 					} else {
-						 outgoingPayments = outgoingPaymentDao
-							.getByPhoneNumberAndAmountPaid(
-									getPhoneNumber(message), new BigDecimal(
-											getAmount(message).toString()),
-									OutgoingPayment.Status.UNCONFIRMED);
+						outgoingPayments = outgoingPaymentDao.getByPhoneNumberAndAmountPaid(
+								phoneNumber, amount, OutgoingPayment.Status.UNCONFIRMED);
 					}
 					
 
 					if (!outgoingPayments.isEmpty()) {
-						final OutgoingPayment outgoingPayment = outgoingPayments
-								.get(0);
-						outgoingPayment
-								.setConfirmationCode(getConfirmationCode(message));
-						outgoingPayment.setTimeConfirmed(getTimePaid(message,
-								true).getTime());
-						outgoingPayment
-								.setStatus(OutgoingPayment.Status.CONFIRMED);
-						performOutgoingPaymentFraudCheck(message,
-								outgoingPayment);
+						final OutgoingPayment outgoingPayment = outgoingPayments.get(0);
+						outgoingPayment.setConfirmationCode(getConfirmationCode(message));
+						outgoingPayment.setTimeConfirmed(getTimePaid(message, true).getTime());
+						outgoingPayment.setStatus(OutgoingPayment.Status.CONFIRMED);
+						performOutgoingPaymentFraudCheck(message, outgoingPayment);
 
-						outgoingPaymentDao
-								.updateOutgoingPayment(outgoingPayment);
+						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 
 						logMessageDao.saveLogMessage(new LogMessage(
 								LogMessage.LogLevel.INFO,
 								"Outgoing Confirmation Payment", message
 										.getTextContent()));
 					} else {
-						logMessageDao
-								.saveLogMessage(new LogMessage(
-										LogMessage.LogLevel.WARNING,
-										"Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message",
-										message.getTextContent()));
+						logMessageDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message",
+										message.getTextContent());
 					}
 				} catch (IllegalArgumentException ex) {
-					logMessageDao
-							.saveLogMessage(new LogMessage(
-									LogMessage.LogLevel.ERROR,
-									"Outgoing Confirmation Payment: Message failed to parse; likely incorrect format",
-									message.getTextContent()));
+					ex.printStackTrace();
+					logMessageDao.error("Outgoing Confirmation Payment: Message failed to parse; likely incorrect format",
+									message.getTextContent());
 					throw new RuntimeException(ex);
 				} catch (Exception ex) {
-					logMessageDao
-							.saveLogMessage(new LogMessage(
-									LogMessage.LogLevel.ERROR,
-									"Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS",
-									message.getTextContent()));
+					logMessageDao.error("Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS",
+									message.getTextContent());
 					throw new RuntimeException(ex);
 				}
 			}
@@ -456,8 +415,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 
 	private boolean isValidOutgoingPaymentConfirmation(FrontlineMessage message) {
-		return PERSONAL_OUTGOING_PAYMENT_REGEX_PATTERN.matcher(
-				message.getTextContent()).matches();
+		return message.getTextContent().matches(OUTGOING_PAYMENT_REGEX);
 	}
 
 //>END - OUTGOING PAYMENT REGION
@@ -520,18 +478,16 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 	
 	boolean isSentToSameAccountMessage(FrontlineMessage message) {
-		return SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX_PATTERN.matcher(message.getTextContent()).matches();
+		return message.getTextContent().matches(SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX);
 	}
 
-	boolean isInsufficientFundsMessage(FrontlineMessage message){
-		return PERSONAL_OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX_PATTERN.matcher(message.getTextContent()).matches();
+	boolean isInsufficientFundsMessage(FrontlineMessage message) {
+		return message.getTextContent().matches(OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX);
 	}
 	
 	@Override
 	boolean isMessageTextValid(String message) {
-		return PERSONAL_INCOMING_PAYMENT_REGEX_PATTERN.matcher(message).matches() 
-			//|| PAYBILL_REGEX_PATTERN.matcher(message).matches()
-			;
+		return message.matches(INCOMING_PAYMENT_REGEX);
 	}
 	
 	@Override
