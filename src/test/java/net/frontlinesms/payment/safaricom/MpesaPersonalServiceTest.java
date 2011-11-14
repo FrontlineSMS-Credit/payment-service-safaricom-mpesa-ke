@@ -47,10 +47,8 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 	}
 	
 	public void testValidBalanceFraudCheck() throws DuplicateKeyException {
-		balance.reset();
 		// 30 kes transaction fees
-		balance.setBalanceAmount("2265");
-		balance.updateBalance();
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("2265"));
 		//Test When Payment is successful OutgoingPayment
 		testOutgoingPaymentProcessing("BC77RI604 Confirmed. " +
 				"Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM " +
@@ -60,9 +58,7 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 		
 		verify(logger).info("No Fraud occured!");
 		
-		balance.reset();
-		balance.setBalanceAmount("1000");
-		balance.updateBalance();
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("1000"));
 		
 		//Test When Payment is successful IncomingPayment
 		testIncomingPaymentProcessing("BI94HR849 Confirmed.\n" +
@@ -75,9 +71,7 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 	}
 	
 	public void testInvalidBalanceFraudCheck() throws DuplicateKeyException {
-		balance.reset();
-		balance.setBalanceAmount("4265");
-		balance.updateBalance();
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("4265"));
 		//Test When Payment is successful OutgoingPayment //Ksh100 lost
 		testOutgoingPaymentProcessing("BC77RI604 Confirmed. " +
 				"Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM " +
@@ -89,9 +83,7 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 	}
 	
 	public void testOutgoingPaymentProcessing() throws DuplicateKeyException {
-		balance.reset();
-		balance.setBalanceAmount("2265");
-		balance.updateBalance();
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("2265"));
 		
 		testOutgoingPaymentProcessing("BC77RI604 Confirmed. " +
 				"Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM " +
@@ -110,19 +102,15 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 	}
 	
 	public void testIncomingPaymentProcessing() {
-		balance.reset();
-		balance.setBalanceAmount("1");
-		balance.updateBalance();
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("1"));
 		
 		testIncomingPaymentProcessing("BI94HR849 Confirmed.\n" +
 				"You have received Ksh1,235 from\nJOHN KIU 254723908001\non 30/5/11 at 10:35 PM\n" +
 				"New M-PESA balance is Ksh1,236",
 				PHONENUMBER_1, ACCOUNTNUMBER_1_1, "1235", "BI94HR849",
 				"JOHN KIU", "30/5/11 10:35 PM");
-		
-		balance.reset();
-		balance.setBalanceAmount("1");
-		balance.updateBalance();
+
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("1"));
 		
 		testIncomingPaymentProcessing("BI94HR849 Confirmed.\n" +
 				"You have received Ksh1,235 from\nyohan mwenyewe alibamba 254723908001\non 3/5/11 at 8:35 PM\n" +
@@ -131,10 +119,8 @@ public class MpesaPersonalServiceTest extends MpesaPaymentServiceTest<MpesaPerso
 				"yohan mwenyewe alibamba", "3/5/11 8:35 PM");
 	}
 	
-	public void testBalanceProcessing(){
-		balance.reset();
-		balance.setBalanceAmount("1235");
-		balance.updateBalance();
+	public void testBalanceProcessing() {
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("1235"));
 		
 		testBalanceProcessing("NB56GF6JK Confirmed.\n" +
 			"Your M-PESA balance was Ksh1,235\n" +

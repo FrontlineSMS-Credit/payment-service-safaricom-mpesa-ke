@@ -1,6 +1,6 @@
 package net.frontlinesms.payment.safaricom;
 
-import net.frontlinesms.payment.PaymentServiceException;
+import net.frontlinesms.payment.service.PaymentServiceException;
 
 import org.creditsms.plugins.paymentview.data.domain.Client;
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;

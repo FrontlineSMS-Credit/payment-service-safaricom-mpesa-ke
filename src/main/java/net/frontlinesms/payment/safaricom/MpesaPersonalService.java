@@ -12,9 +12,9 @@ import java.util.regex.Pattern;
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
-import net.frontlinesms.payment.PaymentJob;
-import net.frontlinesms.payment.PaymentServiceException;
-import net.frontlinesms.payment.PaymentStatus;
+import net.frontlinesms.payment.service.PaymentJob;
+import net.frontlinesms.payment.service.PaymentServiceException;
+import net.frontlinesms.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 

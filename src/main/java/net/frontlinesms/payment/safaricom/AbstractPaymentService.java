@@ -13,12 +13,12 @@ import net.frontlinesms.data.repository.ContactDao;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.events.FrontlineEventNotification;
-import net.frontlinesms.payment.PaymentJob;
-import net.frontlinesms.payment.PaymentJobProcessor;
-import net.frontlinesms.payment.PaymentService;
-import net.frontlinesms.payment.PaymentServiceException;
-import net.frontlinesms.payment.PaymentStatus;
 import net.frontlinesms.payment.event.PaymentStatusEventNotification;
+import net.frontlinesms.payment.service.PaymentJob;
+import net.frontlinesms.payment.service.PaymentJobProcessor;
+import net.frontlinesms.payment.service.PaymentService;
+import net.frontlinesms.payment.service.PaymentServiceException;
+import net.frontlinesms.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableService;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 
@@ -43,11 +43,11 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	private static final String PROPERTY_PREFIX = "plugins.payment.mpesa.";
 
 	protected static final String PROPERTY_PIN = PROPERTY_PREFIX + "pin";
-	private static final String PROPERTY_BALANCE_CONFIRMATION_CODE = PROPERTY_PREFIX + "balance.confirmation";
-	private static final String PROPERTY_BALANCE_AMOUNT = PROPERTY_PREFIX + "balance.amount";
-	private static final String PROPERTY_BALANCE_DATE_TIME = PROPERTY_PREFIX + "balance.timestamp";
-	private static final String PROPERTY_BALANCE_UPDATE_METHOD = PROPERTY_PREFIX + "balance.update.method";
-	private static final String PROPERTY_MODEM_SERIAL = PROPERTY_PREFIX + "modem.serial";
+	protected static final String PROPERTY_BALANCE_CONFIRMATION_CODE = PROPERTY_PREFIX + "balance.confirmation";
+	protected static final String PROPERTY_BALANCE_AMOUNT = PROPERTY_PREFIX + "balance.amount";
+	protected static final String PROPERTY_BALANCE_DATE_TIME = PROPERTY_PREFIX + "balance.timestamp";
+	protected static final String PROPERTY_BALANCE_UPDATE_METHOD = PROPERTY_PREFIX + "balance.update.method";
+	protected static final String PROPERTY_MODEM_SERIAL = PROPERTY_PREFIX + "modem.serial";
 	
 	public String getBalanceConfirmationCode() {
 		return getProperty(PROPERTY_BALANCE_CONFIRMATION_CODE, String.class);
@@ -188,7 +188,6 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		responseJobProcessor.stop();
 	}
 	
-	@SuppressWarnings("unchecked")
 	protected <T extends Object> T getProperty(String key, Class<T> clazz) {
 		return PersistableSettings.getPropertyValue(getPropertiesStructure(), settings, key, clazz);
 	}

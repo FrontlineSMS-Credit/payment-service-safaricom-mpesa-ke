@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
-import net.frontlinesms.payment.PaymentServiceException;
+import net.frontlinesms.payment.service.PaymentServiceException;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 

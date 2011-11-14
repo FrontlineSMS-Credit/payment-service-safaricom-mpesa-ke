@@ -8,10 +8,10 @@ import java.util.regex.Pattern;
 
 import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
-import net.frontlinesms.payment.PaymentJob;
-import net.frontlinesms.payment.PaymentServiceException;
-import net.frontlinesms.payment.PaymentStatus;
 import net.frontlinesms.payment.event.BalanceFraudNotification;
+import net.frontlinesms.payment.service.PaymentJob;
+import net.frontlinesms.payment.service.PaymentServiceException;
+import net.frontlinesms.payment.service.PaymentStatus;
 
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
