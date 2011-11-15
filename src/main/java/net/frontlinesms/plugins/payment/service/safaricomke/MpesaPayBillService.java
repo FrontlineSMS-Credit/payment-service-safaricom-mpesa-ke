@@ -1,4 +1,4 @@
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -6,7 +6,7 @@ import java.util.Date;
 
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
-import net.frontlinesms.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 

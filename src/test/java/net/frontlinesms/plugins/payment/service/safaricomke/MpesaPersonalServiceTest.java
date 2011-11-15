@@ -1,13 +1,14 @@
 /**
  * 
  */
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import net.frontlinesms.data.DuplicateKeyException;
+import net.frontlinesms.plugins.payment.service.safaricomke.MpesaPersonalService;
 
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 

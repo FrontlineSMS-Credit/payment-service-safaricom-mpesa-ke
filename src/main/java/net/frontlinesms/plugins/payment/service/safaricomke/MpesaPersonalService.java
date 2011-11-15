@@ -1,4 +1,4 @@
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -11,9 +11,9 @@ import java.util.List;
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
-import net.frontlinesms.payment.service.PaymentJob;
-import net.frontlinesms.payment.service.PaymentServiceException;
-import net.frontlinesms.payment.service.PaymentStatus;
+import net.frontlinesms.plugins.payment.service.PaymentJob;
+import net.frontlinesms.plugins.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 

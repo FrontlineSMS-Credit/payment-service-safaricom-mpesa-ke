@@ -1,4 +1,4 @@
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -7,10 +7,10 @@ import java.util.Date;
 
 import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
-import net.frontlinesms.payment.event.BalanceFraudNotification;
-import net.frontlinesms.payment.service.PaymentJob;
-import net.frontlinesms.payment.service.PaymentServiceException;
-import net.frontlinesms.payment.service.PaymentStatus;
+import net.frontlinesms.plugins.payment.event.BalanceFraudNotification;
+import net.frontlinesms.plugins.payment.service.PaymentJob;
+import net.frontlinesms.plugins.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.PaymentStatus;
 
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
@@ -281,7 +281,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 						if (clientDao.getClientByPhoneNumber(getPhoneNumber(message))!=null) {
 							//save the incoming payment in generic account
 							account = accountDao.getGenericAccountsByClientId(clientDao.getClientByPhoneNumber(getPhoneNumber(message)).getId());
-							pvLog.warn("The account does not exist for this client. Incoming payment has been saved in generic account. "+ message.getTextContent());
+							log.warn("The account does not exist for this client. Incoming payment has been saved in generic account. "+ message.getTextContent());
 						} else {
 							// client does not exist in the database -> create client and generic account
 							final String paymentBy = getPaymentBy(message);
@@ -330,11 +330,11 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							new LogMessage(LogMessage.LogLevel.ERROR,
 										   	"Incoming Payment: Message failed to parse; likely incorrect format",
 										   	 message.getTextContent()));
-					pvLog.warn("Message failed to parse; likely incorrect format", ex);
+					log.warn("Message failed to parse; likely incorrect format", ex);
 					updateStatus(PaymentStatus.ERROR);
 					throw new RuntimeException(ex);
 				} catch (final Exception ex) {
-					pvLog.error("Unexpected exception parsing incoming payment SMS.", ex);
+					log.error("Unexpected exception parsing incoming payment SMS.", ex);
 					logMessageDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.ERROR,
 								   	"Incoming Payment: Unexpected exception parsing incoming payment SMS",
@@ -430,9 +430,9 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	void informUserOfFraudIfCommitted(BigDecimal expectedBalance, BigDecimal actualBalance, String messageContent) {
 		if(expectedBalance.compareTo(new BigDecimal(0)) < 0) {
 			//Now we don't want Mathematical embarrassment... TODO explain
-			pvLog.error("Balance for: "+ this.toString() +" is much lower than expected: " + actualBalance + " instead of: "+ expectedBalance);
+			log.error("Balance for: "+ this.toString() +" is much lower than expected: " + actualBalance + " instead of: "+ expectedBalance);
 		} else if(expectedBalance.equals(actualBalance)) {
-			pvLog.info("No Fraud occured!");
+			log.info("No Fraud occured!");
 		} else {
 			String message = "Fraud commited on "+ this.toString() +"? Was expecting balance as: "+expectedBalance+", but was "+actualBalance;
 
@@ -440,7 +440,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					new LogMessage(LogMessage.LogLevel.WARNING,
 						   	message,
 						    messageContent));
-			pvLog.warn(message);
+			log.warn(message);
 			this.eventBus.notifyObservers(new BalanceFraudNotification(message));
 		}
 	}

@@ -1,3 +1,4 @@
+package net.frontlinesms.plugins.payment.service.safaricomke;
 //package net.frontlinesms.payment.safaricom;
 //
 //import java.util.ArrayList;

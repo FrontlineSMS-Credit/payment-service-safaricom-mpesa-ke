@@ -1,4 +1,4 @@
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.frontlinesms.FrontlineUtils;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.data.events.EntitySavedNotification;
@@ -13,12 +14,12 @@ import net.frontlinesms.data.repository.ContactDao;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.events.FrontlineEventNotification;
-import net.frontlinesms.payment.event.PaymentStatusEventNotification;
-import net.frontlinesms.payment.service.PaymentJob;
-import net.frontlinesms.payment.service.PaymentJobProcessor;
-import net.frontlinesms.payment.service.PaymentService;
-import net.frontlinesms.payment.service.PaymentServiceException;
-import net.frontlinesms.payment.service.PaymentStatus;
+import net.frontlinesms.plugins.payment.event.PaymentStatusEventNotification;
+import net.frontlinesms.plugins.payment.service.PaymentJob;
+import net.frontlinesms.plugins.payment.service.PaymentJobProcessor;
+import net.frontlinesms.plugins.payment.service.PaymentService;
+import net.frontlinesms.plugins.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableService;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 
@@ -94,9 +95,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected LogMessageDao logMessageDao;
 	protected ContactDao contactDao;
 	private PersistableSettings settings;
-//	protected BalanceDispatcher balanceDispatcher;
 	
-	protected Logger pvLog = Logger.getLogger(this.getClass());
+	protected Logger log = FrontlineUtils.getLogger(this.getClass());
 	protected TargetAnalytics targetAnalytics;
 
 	public Class<? extends ConfigurableService> getSuperType() {
@@ -230,16 +230,11 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.incomingPaymentDao = pluginController.getIncomingPaymentDao();
 		this.targetAnalytics = pluginController.getTargetAnalytics();
 		this.logMessageDao = pluginController.getLogMessageDao();
-//		if(this.getBalance() == null) setBalance(BalanceProperties.getInstance().getBalance(this));
-//		if(this.balanceDispatcher == null) this.balanceDispatcher = BalanceDispatcher.getInstance();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
 		
 		this.registerToEventBus(
 			pluginController.getUiGeneratorController().getFrontlineController().getEventBus()
 		);
-		
-//		getBalance().setEventBus(this.eventBus);
-		this.pvLog = pluginController.getLogger(this.getClass());
 		
 		this.requestJobProcessor = new PaymentJobProcessor(this);
 		this.requestJobProcessor.start();

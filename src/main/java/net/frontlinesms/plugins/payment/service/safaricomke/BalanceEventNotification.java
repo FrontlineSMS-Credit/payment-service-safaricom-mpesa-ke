@@ -1,4 +1,4 @@
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import net.frontlinesms.events.FrontlineEventNotification;
 

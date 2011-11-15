@@ -1,4 +1,4 @@
-package net.frontlinesms.payment.safaricom;
+package net.frontlinesms.plugins.payment.service.safaricomke;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
@@ -23,14 +23,15 @@ import java.util.Set;
 import net.frontlinesms.FrontlineSMS;
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
-import net.frontlinesms.data.domain.PersistableSettingValue;
 import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.data.events.EntitySavedNotification;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.junit.BaseTestCase;
-import net.frontlinesms.payment.service.PaymentJob;
-import net.frontlinesms.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.PaymentJob;
+import net.frontlinesms.plugins.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.safaricomke.AbstractPaymentService;
+import net.frontlinesms.plugins.payment.service.safaricomke.MpesaPaymentService;
 import net.frontlinesms.test.smslib.SmsLibTestUtils;
 import net.frontlinesms.ui.UiGeneratorController;
 
@@ -207,9 +208,6 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(pluginController.getClientDao()).thenReturn(clientDao);
 		when(pluginController.getUiGeneratorController()).thenReturn(ui);
 		when(pluginController.getTargetAnalytics()).thenReturn(targetAnalytics);
-		
-		logger = mock(Logger.class);
-		when(pluginController.getLogger(any(Class.class))).thenReturn(logger);
 		
 		mpesaPaymentService.initDaosAndServices(pluginController);
 		
