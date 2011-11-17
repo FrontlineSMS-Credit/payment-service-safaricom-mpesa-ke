@@ -10,12 +10,10 @@ import java.util.List;
 
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
-import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
-import net.frontlinesms.serviceconfig.StructuredProperties;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.Client;
@@ -59,8 +57,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		return true;
 	}
 	
-	public void makePayment(final Client client,
-			final OutgoingPayment outgoingPayment)
+	public void makePayment(final OutgoingPayment outgoingPayment)
 			throws PaymentServiceException {
 		final CService cService = super.cService;
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
@@ -88,7 +85,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 
 							final StkResponse enterPhoneNumberResponse = cService.stkRequest(
 									enterPhoneNumberPrompt.getRequest(),
-									client.getPhoneNumber());
+									outgoingPayment.getClient().getPhoneNumber());
 							try {							
 								if (!(enterPhoneNumberResponse instanceof StkValuePrompt)) {
 									logMessageDao.saveLogMessage(LogMessage.error(
@@ -493,13 +490,5 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	public String toString() {
 		return "M-PESA Kenya: Personal Service";
-	}
-	
-	public StructuredProperties getPropertiesStructure() {
-		return super.getPropertiesStructure();
-	}
-	
-	public void setSettings(PersistableSettings settings) {
-		super.setSettings(settings);
 	}
 }

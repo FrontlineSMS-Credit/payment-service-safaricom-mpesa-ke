@@ -5,13 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import net.frontlinesms.data.domain.FrontlineMessage;
-import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
-import net.frontlinesms.serviceconfig.StructuredProperties;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
-import org.creditsms.plugins.paymentview.data.domain.Client;
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 
 @ConfigurableServiceProperties(name="MPESA Kenya PayBill", icon="/icons/mpesa_ke_paybill.png")
@@ -84,21 +81,12 @@ public class MpesaPayBillService extends MpesaPaymentService {
 		return messageText.matches(PAYBILL_REGEX);
 	}
 	
-	public void makePayment(Client client, OutgoingPayment op)
-			throws PaymentServiceException {
+	public void makePayment(OutgoingPayment op) throws PaymentServiceException {
 		throw new PaymentServiceException("Making payments is not possible with a PayBill account.");
 	}
 
 	@Override
 	public String toString() {
 		return "M-PESA Kenya: Paybill Service";
-	}
-	
-	public StructuredProperties getPropertiesStructure() {
-		return super.getPropertiesStructure();
-	}
-	
-	public void setSettings(PersistableSettings settings) {
-		super.setSettings(settings);
 	}
 }

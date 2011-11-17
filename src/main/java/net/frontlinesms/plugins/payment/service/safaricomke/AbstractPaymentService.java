@@ -203,13 +203,6 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		return settings;
 	}
 
-	/**
-	 * Initialise the service using the supplied properties.
-	 */
-	public void initSettings(PersistableSettings settings) {
-		this.settings = settings;
-	}
-
 	public void setPin(final String pin) {
 		setProperty(PROPERTY_PIN, pin);
 	}

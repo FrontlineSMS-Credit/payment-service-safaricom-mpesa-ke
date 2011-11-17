@@ -159,7 +159,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 								outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
 								outgoingPayment.setPaymentId("");
 								outgoingPayment.setConfirmationCode("");
-								outgoingPayment.setPaymentServiceSettings(MpesaPaymentService.this.getSettings());
+								outgoingPayment.setPaymentServiceSettings(getSettings());
 								
 								outgoingPaymentDao.saveOutgoingPayment(outgoingPayment);
 								
@@ -244,7 +244,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							payment.setConfirmationCode(getConfirmationCode(message));
 							payment.setPaymentBy(getPaymentBy(message));
 							payment.setTimePaid(getTimePaid(message));
-							payment.setPaymentServiceSettings(MpesaPaymentService.this.getSettings());
+							payment.setPaymentServiceSettings(getSettings());
 							
 							performIncominPaymentFraudCheck(message, payment);
 							incomingPaymentDao.saveIncomingPayment(payment);
@@ -269,7 +269,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							payment.setConfirmationCode(getConfirmationCode(message));
 							payment.setPaymentBy(getPaymentBy(message));
 							payment.setTimePaid(getTimePaid(message));
-							payment.setPaymentServiceSettings(MpesaPaymentService.this.getSettings());
+							payment.setPaymentServiceSettings(getSettings());
 							
 							performIncominPaymentFraudCheck(message, payment);
 							
@@ -313,7 +313,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 						payment.setConfirmationCode(getConfirmationCode(message));
 						payment.setPaymentBy(getPaymentBy(message));
 						payment.setTimePaid(getTimePaid(message));
-						payment.setPaymentServiceSettings(MpesaPaymentService.this.getSettings());
+						payment.setPaymentServiceSettings(getSettings());
 						
 						performIncominPaymentFraudCheck(message, payment);
 						incomingPaymentDao.saveIncomingPayment(payment);

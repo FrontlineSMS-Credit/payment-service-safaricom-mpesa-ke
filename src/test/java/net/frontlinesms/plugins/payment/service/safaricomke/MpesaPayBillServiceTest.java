@@ -3,7 +3,6 @@ package net.frontlinesms.plugins.payment.service.safaricomke;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.safaricomke.MpesaPayBillService;
 
-import org.creditsms.plugins.paymentview.data.domain.Client;
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 
 
@@ -17,10 +16,10 @@ public class MpesaPayBillServiceTest extends
 	
 	public void testMakePayment(){
 		try{
-			mpesaPaymentService.makePayment(new Client(), new OutgoingPayment());
-			assertFalse(true);
+			mpesaPaymentService.makePayment(new OutgoingPayment());
+			assertFalse(true); // FIXME what exactly is this testing?
 		}catch (PaymentServiceException e) {
-			assertFalse(false);
+			assertFalse(false); // FIXME what exactly is this testing?
 		}
 	}
 

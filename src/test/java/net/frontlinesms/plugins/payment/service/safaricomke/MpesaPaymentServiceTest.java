@@ -93,7 +93,6 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected E mpesaPaymentService;
 	protected Logger logger;
 	private PaymentViewPluginController pluginController;
-//	protected BalanceDispatcher balanceDispatcher;
 	
 	@Override
 	protected void setUp() throws Exception {
@@ -106,7 +105,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(cService.getAtHandler()).thenReturn(aTHandler);
 		mpesaPaymentService.setCService(cService);
 
-		mpesaPaymentService.initSettings(mockSettings(
+		mpesaPaymentService.setSettings(mockSettings(
 				AbstractPaymentService.PROPERTY_PIN, TEST_PIN,
 				AbstractPaymentService.PROPERTY_MODEM_SERIAL, "093SH5S655",
 				AbstractPaymentService.PROPERTY_BALANCE_AMOUNT, new BigDecimal("200"),
@@ -134,14 +133,11 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	
 	private PersistableSettings mockSettings(Object... settingsAndValues) {
 		assert((settingsAndValues.length & 1) == 0): "Should be an equal number of setting keys and value";
-//		PersistableSettings s = mock(PersistableSettings.class);
 		PersistableSettings s = new PersistableSettings(mpesaPaymentService);
 		for(int i=0; i<settingsAndValues.length; i+=2) {
 			String key = (String) settingsAndValues[i];
 			Object value = settingsAndValues[i+1];
 			s.set(key, value);
-//			when(s.get(key))
-//					.thenReturn(PersistableSettingValue.create(value));
 		}
 		
 		return s;
@@ -286,7 +282,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(cService.stkRequest(pinRequiredRequest, TEST_PIN)).thenReturn(pinRequiredResponse);
 		
 		// when
-		mpesaPaymentService.makePayment(CLIENT_1, getOutgoingPayment(CLIENT_1));
+		mpesaPaymentService.makePayment(getOutgoingPayment(CLIENT_1));
 		
 		waitForRequestJob();
 		
