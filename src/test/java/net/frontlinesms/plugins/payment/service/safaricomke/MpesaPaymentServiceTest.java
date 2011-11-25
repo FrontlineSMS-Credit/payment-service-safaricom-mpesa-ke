@@ -210,7 +210,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		IncomingPayment incomingPayment = new IncomingPayment();
 		incomingPayment.setAmountPaid(new BigDecimal("1000"));
 		incomingPayment.setConfirmationCode("BC77RI604");
-		incomingPayment.setPaymentServiceSettings(mpesaPaymentService.getSettings());
+		incomingPayment.setServiceSettings(mpesaPaymentService.getSettings());
 		
 		when(incomingPaymentDao.getByConfirmationCode("BC77RI604")).thenReturn(incomingPayment);
 		
