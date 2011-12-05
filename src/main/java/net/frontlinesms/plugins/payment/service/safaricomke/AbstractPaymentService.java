@@ -111,7 +111,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException, IOException {
 							updateStatus(PaymentStatus.CONFIGURE_STARTED);
-							cService.getAtHandler().configureModem();
+							cService.getAtHandler().stkInit();
 							updateStatus(PaymentStatus.CONFIGURE_COMPLETE);
 							return null;
 						}
