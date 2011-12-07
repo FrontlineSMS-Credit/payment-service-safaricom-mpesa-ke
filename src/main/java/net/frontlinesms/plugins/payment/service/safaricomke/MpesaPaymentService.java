@@ -131,9 +131,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 										"PIN rejected", ""));
 								throw new RuntimeException("PIN rejected");
 							}
-							final StkResponse confirmationResponse = cService
-									.stkRequest(((StkConfirmationPrompt) enterPinResponse)
-											.getRequest());
+							cService.stkRequest(((StkConfirmationPrompt) enterPinResponse).getRequest());
 
 							//save outgoingpayment + create dummy client
 							Client client;
@@ -181,7 +179,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							final StkMenu myAccountMenu = (StkMenu) cService.stkRequest(mPesaMenu.getRequest("My account"));
 							final StkResponse getBalanceResponse = cService.stkRequest(myAccountMenu.getRequest("Show balance"));
 							
-							final StkResponse enterPinResponse = cService.stkRequest(((StkValuePrompt) getBalanceResponse).getRequest(), pin);
+							cService.stkRequest(((StkValuePrompt) getBalanceResponse).getRequest(), pin);
 							updateStatus(PaymentStatus.CHECK_COMPLETE);
 							return null;
 						}
