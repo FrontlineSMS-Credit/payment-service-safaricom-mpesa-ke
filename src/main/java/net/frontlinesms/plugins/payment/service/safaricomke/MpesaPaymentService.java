@@ -223,7 +223,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							payment.setConfirmationCode(getConfirmationCode(message));
 							payment.setPaymentBy(getPaymentBy(message));
 							payment.setTimePaid(getTimePaid(message));
-							payment.setPaymentServiceSettings(getSettings());
+							payment.setServiceSettings(getSettings());
 							
 							performIncominPaymentFraudCheck(message, payment);
 							incomingPaymentDao.saveIncomingPayment(payment);
@@ -248,7 +248,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							payment.setConfirmationCode(getConfirmationCode(message));
 							payment.setPaymentBy(getPaymentBy(message));
 							payment.setTimePaid(getTimePaid(message));
-							payment.setPaymentServiceSettings(getSettings());
+							payment.setServiceSettings(getSettings());
 							
 							performIncominPaymentFraudCheck(message, payment);
 							
@@ -292,7 +292,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 						payment.setConfirmationCode(getConfirmationCode(message));
 						payment.setPaymentBy(getPaymentBy(message));
 						payment.setTimePaid(getTimePaid(message));
-						payment.setPaymentServiceSettings(getSettings());
+						payment.setServiceSettings(getSettings());
 						
 						performIncominPaymentFraudCheck(message, payment);
 						incomingPaymentDao.saveIncomingPayment(payment);
