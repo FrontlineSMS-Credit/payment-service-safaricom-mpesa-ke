@@ -410,7 +410,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	
 	void informUserOfFraudIfCommitted(BigDecimal expectedBalance, BigDecimal actualBalance, String messageContent) {
 		if(expectedBalance.compareTo(new BigDecimal(0)) < 0) {
-			//Now we don't want Mathematical embarrassment... TODO explain
+			//Now we don't want Mathematical embarrassment... TODO explain what this comment means
 			log.error("Balance for: "+ this.toString() +" is much lower than expected: " + actualBalance + " instead of: "+ expectedBalance);
 		} else if(expectedBalance.equals(actualBalance)) {
 			log.info("No Fraud occured!");
