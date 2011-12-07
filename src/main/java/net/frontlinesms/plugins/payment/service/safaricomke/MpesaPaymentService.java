@@ -62,11 +62,11 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		} else if (isValidReverseMessage(message)) {
 			processReversePayment(message);
 		} else if (isInvalidPinMessage(message)) {
-			logMessageDao.saveLogMessage(LogMessage.error(
+			logDao.saveLogMessage(LogMessage.error(
 					"PIN ERROR",
 					"Action failed. You have entered an incorrect mobile money PIN. Please edit PIN and try again"));
 		} else {
-			logMessageDao.saveLogMessage(new LogMessage(LogMessage.LogLevel.INFO,"Payment Message",message.getTextContent()));
+			logDao.saveLogMessage(new LogMessage(LogMessage.LogLevel.INFO,"Payment Message",message.getTextContent()));
 		}
 	}
 	
@@ -110,7 +110,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 												.getRequest(), accountNo
 									);
 							if (!(enterAccountNumberResponse instanceof StkValuePrompt)) {
-								logMessageDao.saveLogMessage(LogMessage.error(
+								logDao.saveLogMessage(LogMessage.error(
 										"Account number rejected", ""));
 								throw new RuntimeException("Account number rejected");
 							}
@@ -120,65 +120,48 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 											.getRequest(), amount
 											.toString());
 							if (!(enterAmountResponse instanceof StkValuePrompt)) {
-								logMessageDao.saveLogMessage(LogMessage.error(
+								logDao.saveLogMessage(LogMessage.error(
 										"amount rejected", ""));
 								throw new RuntimeException("amount rejected");
 							}
 								final StkResponse enterPinResponse = cService.stkRequest(
 										((StkValuePrompt) enterAmountResponse).getRequest(), getPin());
 							if (!(enterPinResponse instanceof StkConfirmationPrompt)) {
-								logMessageDao.saveLogMessage(LogMessage.error(
+								logDao.saveLogMessage(LogMessage.error(
 										"PIN rejected", ""));
 								throw new RuntimeException("PIN rejected");
 							}
 							final StkResponse confirmationResponse = cService
 									.stkRequest(((StkConfirmationPrompt) enterPinResponse)
 											.getRequest());
-							if (confirmationResponse == StkResponse.ERROR) {
-								logMessageDao.saveLogMessage(LogMessage.error(
-										"Payment failed for some reason.", ""));
-								throw new RuntimeException(
-										"Payment failed for some reason.");
+
+							//save outgoingpayment + create dummy client
+							Client client;
+							if (clientDao.getClientByPhoneNumber(businessNo) == null){
+								client = new Client(businessName,"",businessNo);
+								client.setActive(false);
+								clientDao.saveClient(client);
 							} else {
-								//save outgoingpayment + create dummy client
-								Client client;
-								if (clientDao.getClientByPhoneNumber(businessNo) == null){
-									client = new Client(businessName,"",businessNo);
-									client.setActive(false);
-									clientDao.saveClient(client);
-								} else {
-									client = clientDao.getClientByPhoneNumber(businessNo);
-								}
-								
-							
-								OutgoingPayment outgoingPayment = new OutgoingPayment();
-								outgoingPayment.setClient(client);
-								outgoingPayment.setAmountPaid(amount);
-								outgoingPayment.setTimePaid(Calendar.getInstance().getTime());
-								outgoingPayment.setNotes("");
-								outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
-								outgoingPayment.setPaymentId("");
-								outgoingPayment.setConfirmationCode("");
-								outgoingPayment.setPaymentServiceSettings(getSettings());
-								
-								outgoingPaymentDao.saveOutgoingPayment(outgoingPayment);
-								
-								
+								client = clientDao.getClientByPhoneNumber(businessNo);
 							}
+						
+							OutgoingPayment outgoingPayment = new OutgoingPayment();
+							outgoingPayment.setClient(client);
+							outgoingPayment.setAmountPaid(amount);
+							outgoingPayment.setTimePaid(Calendar.getInstance().getTime());
+							outgoingPayment.setNotes("");
+							outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
+							outgoingPayment.setPaymentId("");
+							outgoingPayment.setConfirmationCode("");
+							outgoingPayment.setPaymentServiceSettings(getSettings());
+							
+							outgoingPaymentDao.saveOutgoingPayment(outgoingPayment);
 							return null;
 						}
 					});
-
-				} catch (final SMSLibDeviceException ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"SMSLibDeviceException in makePayment()",
-							ex.getMessage()));
-				} catch (final IOException ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"IOException in makePayment()", ex.getMessage()));
-				} catch (final Throwable ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"Unexpected Exception in makePayment()", ex.getMessage()));
+				} catch (final Throwable t) {
+					logDao.saveLogMessage(LogMessage.error(
+							t.getClass().getSimpleName() + " in makePayment()", t.getMessage()));
 				}
 			}
 		});
@@ -199,25 +182,23 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							final StkResponse getBalanceResponse = cService.stkRequest(myAccountMenu.getRequest("Show balance"));
 							
 							final StkResponse enterPinResponse = cService.stkRequest(((StkValuePrompt) getBalanceResponse).getRequest(), pin);
-							if(enterPinResponse == StkResponse.ERROR) throw new RuntimeException("PIN rejected");
 							updateStatus(PaymentStatus.CHECK_COMPLETE);
-//							BalanceDispatcher.getInstance().queuePaymentService(MpesaPaymentService.this);
 							return null;
 						}
 					});
 					// TODO check finalResponse is OK
 					// TODO wait for response...
 				} catch (final SMSLibDeviceException ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
+					logDao.saveLogMessage(LogMessage.error(
 							"SMSLibDeviceException in checkBalance()",
 							ex.getMessage()));
 					updateStatus(PaymentStatus.ERROR);
 				} catch (final IOException e) {
-					logMessageDao.saveLogMessage(LogMessage.error(
+					logDao.saveLogMessage(LogMessage.error(
 							"IOException in checkBalance()", e.getMessage()));
 					updateStatus(PaymentStatus.ERROR);
 				} catch (RuntimeException e) {
-					logMessageDao.saveLogMessage(LogMessage.error(
+					logDao.saveLogMessage(LogMessage.error(
 							"checkBalance failed for some reason.", e.getMessage()));
 					updateStatus(PaymentStatus.ERROR);
 				}
@@ -321,12 +302,12 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					}
 					
 					//log the saved incoming payment
-					logMessageDao.saveLogMessage(
+					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.INFO,
 										   	"Incoming Payment",
 										   	message.getTextContent()));
 				} catch (final IllegalArgumentException ex) {
-					logMessageDao.saveLogMessage(
+					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.ERROR,
 										   	"Incoming Payment: Message failed to parse; likely incorrect format",
 										   	 message.getTextContent()));
@@ -335,7 +316,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					throw new RuntimeException(ex);
 				} catch (final Exception ex) {
 					log.error("Unexpected exception parsing incoming payment SMS.", ex);
-					logMessageDao.saveLogMessage(
+					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.ERROR,
 								   	"Incoming Payment: Unexpected exception parsing incoming payment SMS",
 								   	message.getTextContent()));
@@ -361,7 +342,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					);
 					
 					incomingPaymentDao.updateIncomingPayment(incomingPayment);
-					logMessageDao.saveLogMessage(
+					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.INFO,"Reverse Transaction",message.getTextContent()));
 				}catch (Exception e) {
 					e.printStackTrace();
@@ -374,7 +355,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 //		queueResponseJob(new PaymentJob() {
 //			public void run() {
 				performBalanceEnquiryFraudCheck(message);
-				logMessageDao.saveLogMessage(
+				logDao.saveLogMessage(
 						new LogMessage(LogMessage.LogLevel.INFO,"Check Balance Response",message.getEndpointId() + ": " + message.getTextContent()));
 //			}
 //		});
@@ -436,7 +417,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		} else {
 			String message = "Fraud commited on "+ this.toString() +"? Was expecting balance as: "+expectedBalance+", but was "+actualBalance;
 
-			logMessageDao.saveLogMessage(
+			logDao.saveLogMessage(
 					new LogMessage(LogMessage.LogLevel.WARNING,
 						   	message,
 						    messageContent));

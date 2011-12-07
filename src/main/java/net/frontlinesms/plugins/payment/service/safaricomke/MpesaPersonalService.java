@@ -17,7 +17,6 @@ import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.Client;
-import org.creditsms.plugins.paymentview.data.domain.LogMessage;
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 import org.smslib.CService;
 import org.smslib.SMSLibDeviceException;
@@ -88,14 +87,12 @@ public class MpesaPersonalService extends MpesaPaymentService {
 									outgoingPayment.getClient().getPhoneNumber());
 							try {							
 								if (!(enterPhoneNumberResponse instanceof StkValuePrompt)) {
-									logMessageDao.saveLogMessage(LogMessage.error(
-											"Phone number rejected", ""));
+									logDao.error("Phone number rejected", "");
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 	
-										outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-										updateStatus(PaymentStatus.ERROR);
-									throw new RuntimeException(
-											"Phone number rejected");
+									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
+									updateStatus(PaymentStatus.ERROR);
+									throw new RuntimeException("Phone number rejected");
 								}
 								final StkResponse enterAmountResponse = cService
 										.stkRequest(
@@ -103,7 +100,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 														.getRequest(), amount
 														.toString());
 								if (!(enterAmountResponse instanceof StkValuePrompt)) {
-									logMessageDao.saveLogMessage(LogMessage.error("amount rejected", ""));
+									logDao.error("amount rejected", "");
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 									updateStatus(PaymentStatus.ERROR);
@@ -113,30 +110,16 @@ public class MpesaPersonalService extends MpesaPaymentService {
 										.stkRequest(((StkValuePrompt) enterAmountResponse)
 														.getRequest(), getPin());
 								if (!(enterPinResponse instanceof StkConfirmationPrompt)) {
-									logMessageDao.saveLogMessage(LogMessage.error(
-											"PIN rejected", ""));
+									logDao.error("PIN rejected", "");
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 									updateStatus(PaymentStatus.ERROR);
 									throw new RuntimeException("PIN rejected");
 								}
-								final StkResponse confirmationResponse = cService
-										.stkRequest(((StkConfirmationPrompt) enterPinResponse)
+								cService.stkRequest(((StkConfirmationPrompt) enterPinResponse)
 												.getRequest());
-								if (confirmationResponse == StkResponse.ERROR) {
-									logMessageDao.saveLogMessage(LogMessage.error(
-											"Payment failed for some reason.", ""));
-									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
-									outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-									updateStatus(PaymentStatus.ERROR);
-									throw new RuntimeException(
-											"Payment failed for some reason.");
-								}
 								outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
-								logMessageDao.saveLogMessage(new LogMessage(
-										LogMessage.LogLevel.INFO,
-										"Outgoing Payment", outgoingPayment
-												.toStringForLogs()));
+								logDao.info("Outgoing Payment", outgoingPayment.toStringForLogs());
 	
 								outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 								updateStatus(PaymentStatus.COMPLETE);
@@ -148,30 +131,15 @@ public class MpesaPersonalService extends MpesaPaymentService {
 							return null;
 						}
 					});
-
-				} catch (final SMSLibDeviceException ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"SMSLibDeviceException in makePayment()",
-							ex.getMessage()));
-							outgoingPayment
-							.setStatus(OutgoingPayment.Status.ERROR);
+				} catch (Exception ex) {
+					logDao.error("Payment failed due to " + ex.getClass().getSimpleName(), ex.getMessage());
+					outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
 					try {
 						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 					} catch (DuplicateKeyException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logDao.error("Unable to update payment: " + ex.getClass().getSimpleName(), ex.getMessage());
 					}
-				} catch (final IOException ex) {
-					logMessageDao.saveLogMessage(LogMessage.error(
-							"IOException in makePayment()", ex.getMessage()));
-					outgoingPayment
-					.setStatus(OutgoingPayment.Status.ERROR);
-					try {
-						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
-					} catch (DuplicateKeyException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					updateStatus(PaymentStatus.ERROR);
 				}
 			}
 		});
@@ -189,7 +157,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 				if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
 				} else if (isFailedMpesaPayment(message)) {
-					logMessageDao.saveLogMessage(new LogMessage(LogMessage.LogLevel.ERROR,"Payment Message: Failed message",message.getTextContent()));
+					logDao.error("Payment Message: Failed message",message.getTextContent());
 				} else if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
 				} else if (isBelowMinimumAmount(message)) {
@@ -206,9 +174,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 
 	private void reportBelowMinimumAmount() {
-		logMessageDao.saveLogMessage(LogMessage.error(
-				"PAYMENT FAILED",
-				"Payment Failed. Payment was less than minimum amount."));
+		logDao.error("PAYMENT FAILED", "Payment Failed. Payment was less than minimum amount.");
 	}
 	
 	private boolean isBelowMinimumAmount(final FrontlineMessage message) {
@@ -235,40 +201,20 @@ public class MpesaPersonalService extends MpesaPaymentService {
 											getAmount(message).toString()),
 									OutgoingPayment.Status.UNCONFIRMED);
 					}
-					
 
 					if (!outgoingPayments.isEmpty()) {
-						final OutgoingPayment outgoingPayment = outgoingPayments
-								.get(0);
-						outgoingPayment
-								.setStatus(OutgoingPayment.Status.ERROR);
-
-						outgoingPaymentDao
-								.updateOutgoingPayment(outgoingPayment);
-						
-						logMessageDao.saveLogMessage(new LogMessage(
-								LogMessage.LogLevel.ERROR,
-								"PAYMENT FAILED", "Insufficient funds in mobile money account."));
+						final OutgoingPayment outgoingPayment = outgoingPayments.get(0);
+						outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
+						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
+						logDao.error("PAYMENT FAILED", "Insufficient funds in mobile money account.");
 					} else {
-						logMessageDao
-								.saveLogMessage(new LogMessage(
-										LogMessage.LogLevel.WARNING,
-										"Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message",
-										message.getTextContent()));
+						logDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message", message.getTextContent());
 					}
 				} catch (IllegalArgumentException ex) {
-					logMessageDao
-							.saveLogMessage(new LogMessage(
-									LogMessage.LogLevel.ERROR,
-									"Outgoing Confirmation Payment: Message failed to parse; likely incorrect format",
-									message.getTextContent()));
+					logDao.error("Outgoing Confirmation Payment: Message failed to parse; likely incorrect format", message.getTextContent());
 					throw new RuntimeException(ex);
 				} catch (Exception ex) {
-					logMessageDao
-							.saveLogMessage(new LogMessage(
-									LogMessage.LogLevel.ERROR,
-									"Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS",
-									message.getTextContent()));
+					logDao.error("Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS", message.getTextContent());
 					throw new RuntimeException(ex);
 				}
 			}
@@ -289,42 +235,21 @@ public class MpesaPersonalService extends MpesaPaymentService {
 											getAmount(message).toString()),
 									OutgoingPayment.Status.UNCONFIRMED);
 					}
-					
 
 					if (!outgoingPayments.isEmpty()) {
-						final OutgoingPayment outgoingPayment = outgoingPayments
-								.get(0);
-						outgoingPayment.setTimeConfirmed(getTimePaid(message,
-								true).getTime());
-						outgoingPayment
-								.setStatus(OutgoingPayment.Status.ERROR);
-
-						outgoingPaymentDao
-								.updateOutgoingPayment(outgoingPayment);
-						
-						logMessageDao.saveLogMessage(new LogMessage(
-								LogMessage.LogLevel.ERROR,
-								"PAYMENT FAILED", "Sending funds to the same mobile money account."));
+						final OutgoingPayment outgoingPayment = outgoingPayments.get(0);
+						outgoingPayment.setTimeConfirmed(getTimePaid(message, true).getTime());
+						outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
+						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
+						logDao.error("PAYMENT FAILED", "Sending funds to the same mobile money account.");
 					} else {
-						logMessageDao
-								.saveLogMessage(new LogMessage(
-										LogMessage.LogLevel.WARNING,
-										"Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message",
-										message.getTextContent()));
+						logDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message", message.getTextContent());
 					}
 				} catch (IllegalArgumentException ex) {
-					logMessageDao
-							.saveLogMessage(new LogMessage(
-									LogMessage.LogLevel.ERROR,
-									"Outgoing Confirmation Payment: Message failed to parse; likely incorrect format",
-									message.getTextContent()));
+					logDao.error("Outgoing Confirmation Payment: Message failed to parse; likely incorrect format", message.getTextContent());
 					throw new RuntimeException(ex);
 				} catch (Exception ex) {
-					logMessageDao
-							.saveLogMessage(new LogMessage(
-									LogMessage.LogLevel.ERROR,
-									"Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS",
-									message.getTextContent()));
+					logDao.error("Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS", message.getTextContent());
 					throw new RuntimeException(ex);
 				}
 			}
@@ -359,22 +284,16 @@ public class MpesaPersonalService extends MpesaPaymentService {
 
 						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 
-						logMessageDao.saveLogMessage(new LogMessage(
-								LogMessage.LogLevel.INFO,
-								"Outgoing Confirmation Payment", message
-										.getTextContent()));
+						logDao.info("Outgoing Confirmation Payment", message.getTextContent());
 					} else {
-						logMessageDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message",
-										message.getTextContent());
+						logDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message", message.getTextContent());
 					}
 				} catch (IllegalArgumentException ex) {
 					ex.printStackTrace();
-					logMessageDao.error("Outgoing Confirmation Payment: Message failed to parse; likely incorrect format",
-									message.getTextContent());
+					logDao.error("Outgoing Confirmation Payment: Message failed to parse; likely incorrect format", message.getTextContent());
 					throw new RuntimeException(ex);
 				} catch (Exception ex) {
-					logMessageDao.error("Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS",
-									message.getTextContent());
+					logDao.error("Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS", message.getTextContent());
 					throw new RuntimeException(ex);
 				}
 			}

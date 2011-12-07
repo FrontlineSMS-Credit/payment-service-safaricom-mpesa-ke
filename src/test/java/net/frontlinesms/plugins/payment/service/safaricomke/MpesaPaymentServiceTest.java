@@ -506,7 +506,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	
 	private StkValuePrompt mockInputRequirement(String title, int... nums) {
 		StkValuePrompt ir = mock(StkValuePrompt.class);
-		when(ir.getPromptText()).thenReturn(title);
+		when(ir.getText()).thenReturn(title);
 		
 		StkRequest mockRequest = mock(StkRequest.class);
 		when(ir.getRequest()).thenReturn(mockRequest);
@@ -515,7 +515,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	
 	private StkConfirmationPrompt mockConfirmation(String title) {
 		StkConfirmationPrompt ir = mock(StkConfirmationPrompt.class);
-		when(ir.getPromptText()).thenReturn(title);
+		when(ir.getText()).thenReturn(title);
 		
 		StkRequest mockRequest = mock(StkRequest.class);
 		when(ir.getRequest()).thenReturn(mockRequest);
