@@ -32,7 +32,6 @@ import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.safaricomke.AbstractPaymentService;
 import net.frontlinesms.plugins.payment.service.safaricomke.MpesaPaymentService;
-import net.frontlinesms.test.smslib.SmsLibTestUtils;
 import net.frontlinesms.ui.UiGeneratorController;
 
 import org.apache.log4j.Logger;
@@ -97,6 +96,8 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
+		
+		this.logger = mock(Logger.class);
 
 		this.mpesaPaymentService = (E) createNewTestClass();
 		
@@ -112,9 +113,6 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				AbstractPaymentService.PROPERTY_BALANCE_UPDATE_METHOD, "balance enquiry",
 				AbstractPaymentService.PROPERTY_BALANCE_CONFIRMATION_CODE, "7HHSK457S",
 				AbstractPaymentService.PROPERTY_BALANCE_DATE_TIME, System.currentTimeMillis()));
-		
-//		this.balanceDispatcher = BalanceDispatcher.getInstance();
-
 		
 		setUpDaos();
 
@@ -506,7 +504,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	
 	private StkValuePrompt mockInputRequirement(String title, int... nums) {
 		StkValuePrompt ir = mock(StkValuePrompt.class);
-		when(ir.getPromptText()).thenReturn(title);
+		when(ir.getText()).thenReturn(title);
 		
 		StkRequest mockRequest = mock(StkRequest.class);
 		when(ir.getRequest()).thenReturn(mockRequest);
@@ -515,7 +513,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	
 	private StkConfirmationPrompt mockConfirmation(String title) {
 		StkConfirmationPrompt ir = mock(StkConfirmationPrompt.class);
-		when(ir.getPromptText()).thenReturn(title);
+		when(ir.getText()).thenReturn(title);
 		
 		StkRequest mockRequest = mock(StkRequest.class);
 		when(ir.getRequest()).thenReturn(mockRequest);

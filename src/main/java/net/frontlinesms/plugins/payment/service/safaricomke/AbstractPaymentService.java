@@ -92,7 +92,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected TargetDao targetDao;
 	protected IncomingPaymentDao incomingPaymentDao;
 	protected OutgoingPaymentDao outgoingPaymentDao;
-	protected LogMessageDao logMessageDao;
+	protected LogMessageDao logDao;
 	protected ContactDao contactDao;
 	private PersistableSettings settings;
 	
@@ -111,14 +111,14 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException, IOException {
 							updateStatus(PaymentStatus.CONFIGURE_STARTED);
-							cService.getAtHandler().configureModem();
+							cService.getAtHandler().stkInit();
 							updateStatus(PaymentStatus.CONFIGURE_COMPLETE);
 							return null;
 						}
 					});
 				} catch (Throwable t) {
 					t.printStackTrace();
-					logMessageDao.error(t.getClass().getSimpleName() + " in configureModem()", t);
+					logDao.error(t.getClass().getSimpleName() + " in configureModem()", t);
 					updateStatus(PaymentStatus.ERROR);
 				}
 			}
@@ -222,7 +222,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.targetDao = pluginController.getTargetDao();
 		this.incomingPaymentDao = pluginController.getIncomingPaymentDao();
 		this.targetAnalytics = pluginController.getTargetAnalytics();
-		this.logMessageDao = pluginController.getLogMessageDao();
+		this.logDao = pluginController.getLogMessageDao();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
 		
 		this.registerToEventBus(
