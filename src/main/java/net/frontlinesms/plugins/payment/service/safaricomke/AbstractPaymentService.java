@@ -37,7 +37,7 @@ import org.smslib.CService;
 import org.smslib.SMSLibDeviceException;
 import org.smslib.handler.ATHandler.SynchronizedWorkflow;
 
-public abstract class AbstractPaymentService implements PaymentService, EventObserver{
+public abstract class AbstractPaymentService implements PaymentService, EventObserver {
 //> PERSISTENT PROPERTIES
 	/** Prefix attached to every property name. */
 	private static final String PROPERTY_PREFIX = "plugins.payment.mpesa.";
