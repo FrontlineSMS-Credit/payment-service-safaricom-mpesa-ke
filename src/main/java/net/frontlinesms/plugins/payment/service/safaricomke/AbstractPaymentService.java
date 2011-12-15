@@ -22,6 +22,7 @@ import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableService;
 import net.frontlinesms.serviceconfig.PasswordString;
+import net.frontlinesms.serviceconfig.SmsModemReference;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 
 import org.apache.log4j.Logger;
@@ -191,7 +192,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		p.put(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
 		p.put(PROPERTY_BALANCE_DATE_TIME, 0L);
 		p.put(PROPERTY_BALANCE_UPDATE_METHOD, "");
-		p.put(PROPERTY_MODEM_SERIAL, "");
+		p.put(PROPERTY_MODEM_SERIAL, new SmsModemReference(null));
 		return p;
 	}
 
