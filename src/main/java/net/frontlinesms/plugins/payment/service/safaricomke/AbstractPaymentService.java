@@ -201,10 +201,6 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public StructuredProperties getPropertiesStructure() {
 		StructuredProperties p = new StructuredProperties();
 		p.put(PROPERTY_PIN, new PasswordString(""));
-		p.put(PROPERTY_BALANCE_CONFIRMATION_CODE, "");
-		p.put(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
-		p.put(PROPERTY_BALANCE_DATE_TIME, 0L);
-		p.put(PROPERTY_BALANCE_UPDATE_METHOD, "");
 		p.put(PROPERTY_MODEM_SERIAL, new SmsModemReference(null));
 		return p;
 	}
