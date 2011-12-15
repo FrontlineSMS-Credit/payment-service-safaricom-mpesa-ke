@@ -172,7 +172,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setUpDaos() {
+	private void setUpDaos() throws Exception {
 		incomingPaymentDao = mock(IncomingPaymentDao.class);
 		outgoingPaymentDao= mock(OutgoingPaymentDao.class);
 	    logMessageDao = mock(LogMessageDao.class);
@@ -187,9 +187,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		ui = mock(UiGeneratorController.class);
 		
 		FrontlineSMS fsms = mock(FrontlineSMS.class);
-
 		EventBus eventBus = mock(EventBus.class);
-		mpesaPaymentService.registerToEventBus(eventBus);
 		when(fsms.getEventBus()).thenReturn(eventBus);
 		when(ui.getFrontlineController()).thenReturn(fsms);
 		
@@ -203,7 +201,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(pluginController.getUiGeneratorController()).thenReturn(ui);
 		when(pluginController.getTargetAnalytics()).thenReturn(targetAnalytics);
 		
-		mpesaPaymentService.initDaosAndServices(pluginController);
+		mpesaPaymentService.init(pluginController);
 		
 		IncomingPayment incomingPayment = new IncomingPayment();
 		incomingPayment.setAmountPaid(new BigDecimal("1000"));

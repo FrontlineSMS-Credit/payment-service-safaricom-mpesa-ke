@@ -153,7 +153,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	protected void processMessage(final FrontlineMessage message) {
 		if (message.getEndpointId() != null) {
-			if(getPsSmsModemSerial().equals(message.getEndpointId())) {
+			if(getModemSerial().equals(message.getEndpointId())) {
 				if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
 				} else if (isFailedMpesaPayment(message)) {

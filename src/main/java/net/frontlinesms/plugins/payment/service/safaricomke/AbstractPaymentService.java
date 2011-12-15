@@ -14,6 +14,7 @@ import net.frontlinesms.data.repository.ContactDao;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.events.FrontlineEventNotification;
+import net.frontlinesms.messaging.sms.modem.SmsModem;
 import net.frontlinesms.plugins.payment.event.PaymentStatusEventNotification;
 import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentJobProcessor;
@@ -68,8 +69,9 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	private PersistableSettings settings;
 	
 //> CONSTRUCTORS AND INITIALISERS
-	// FIXME this is not currently called
-	public void initDaosAndServices(final PaymentViewPluginController pluginController) {
+	public void init(PaymentViewPluginController pluginController) throws PaymentServiceException {
+		setCService(getCService(pluginController));
+		
 		this.accountDao = pluginController.getAccountDao();
 		this.clientDao = pluginController.getClientDao();
 		this.outgoingPaymentDao = pluginController.getOutgoingPaymentDao();
@@ -79,15 +81,25 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.logDao = pluginController.getLogMessageDao();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
 		
-		this.registerToEventBus(
-			pluginController.getUiGeneratorController().getFrontlineController().getEventBus()
-		);
+		this.eventBus = pluginController.getUiGeneratorController().getFrontlineController().getEventBus();
+		eventBus.registerObserver(this);
 		
 		this.requestJobProcessor = new PaymentJobProcessor(this);
 		this.requestJobProcessor.start();
 		
 		this.responseJobProcessor = new PaymentJobProcessor(this);
 		this.responseJobProcessor.start();
+	}
+
+	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {
+		// TODO is there a neater way to do this?
+		String serial = getModemSerial();
+		for(SmsModem m : pluginController.getUiGeneratorController().getFrontlineController().getSmsServiceManager().getSmsModems()) {
+			if(m.getSerial() == serial) {
+				return m.getCService();
+			}
+		}
+		throw new PaymentServiceException("No CService found for serial: " + serial);
 	}
 
 	protected void initIfRequired() throws SMSLibDeviceException, IOException {
@@ -136,8 +148,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public void setBalanceUpdateMethod(String balanceUpdateMethod) {
 		setProperty(PROPERTY_BALANCE_UPDATE_METHOD, balanceUpdateMethod);
 	}
-	public String getPsSmsModemSerial() {
-		return getProperty(PROPERTY_MODEM_SERIAL, String.class);
+	public String getModemSerial() {
+		return getProperty(PROPERTY_MODEM_SERIAL, SmsModemReference.class).getSerial();
 	}
 	public String getPin() {
 		return getProperty(PROPERTY_PIN, String.class);
@@ -159,6 +171,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	
 	public void startService() throws PaymentServiceException {
 		final CService cService = this.cService;
+		if(cService == null) throw new PaymentServiceException("Cannot start payment service with null CService.");
 		queueRequestJob(new PaymentJob() {
 			public void run() {
 				try{
