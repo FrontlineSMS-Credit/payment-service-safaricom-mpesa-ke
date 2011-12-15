@@ -81,7 +81,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.logDao = pluginController.getLogMessageDao();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
 		
-		this.eventBus = pluginController.getUiGeneratorController().getFrontlineController().getEventBus();
+		this.eventBus = pluginController.getEventBus();
 		eventBus.registerObserver(this);
 		
 		this.requestJobProcessor = new PaymentJobProcessor(this);
@@ -95,7 +95,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		// TODO is there a neater way to do this?
 		String serial = getModemSerial();
 		for(SmsModem m : pluginController.getUiGeneratorController().getFrontlineController().getSmsServiceManager().getSmsModems()) {
-			if(m.getSerial() == serial) {
+			if(m.getSerial() == serial && m.isConnected()) {
 				return m.getCService();
 			}
 		}
