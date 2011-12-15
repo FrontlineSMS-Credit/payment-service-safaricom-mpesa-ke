@@ -13,7 +13,9 @@ import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.PaymentStatus;
+import net.frontlinesms.plugins.payment.service.ui.PaymentServiceUiActionHandler;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
+import net.frontlinesms.ui.UiGeneratorController;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.Client;
@@ -409,5 +411,9 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	public String toString() {
 		return "M-PESA Kenya: Personal Service";
+	}
+
+	public PaymentServiceUiActionHandler getServiceActionUiHandler(UiGeneratorController ui) {
+		return new MpesaPersonalActionUiHandler(this, ui);
 	}
 }

@@ -6,7 +6,9 @@ import java.util.Date;
 
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
+import net.frontlinesms.plugins.payment.service.ui.PaymentServiceUiActionHandler;
 import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
+import net.frontlinesms.ui.UiGeneratorController;
 
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
@@ -83,6 +85,10 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	
 	public void makePayment(OutgoingPayment op) throws PaymentServiceException {
 		throw new PaymentServiceException("Making payments is not possible with a PayBill account.");
+	}
+	
+	public PaymentServiceUiActionHandler getServiceActionUiHandler(UiGeneratorController ui) {
+		return null;
 	}
 
 	@Override
