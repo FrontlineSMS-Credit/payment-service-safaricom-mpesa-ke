@@ -21,6 +21,7 @@ import net.frontlinesms.plugins.payment.service.PaymentService;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableService;
+import net.frontlinesms.serviceconfig.PasswordString;
 import net.frontlinesms.serviceconfig.StructuredProperties;
 
 import org.apache.log4j.Logger;
@@ -185,7 +186,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 
 	public StructuredProperties getPropertiesStructure() {
 		StructuredProperties p = new StructuredProperties();
-		p.put(PROPERTY_PIN, "");
+		p.put(PROPERTY_PIN, new PasswordString(""));
 		p.put(PROPERTY_BALANCE_CONFIRMATION_CODE, "");
 		p.put(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
 		p.put(PROPERTY_BALANCE_DATE_TIME, 0L);
@@ -248,7 +249,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	}
 	
 	void updateStatus(PaymentStatus sending) {
-		if (eventBus != null){
+		if (eventBus != null) {
 			eventBus.notifyObservers(new PaymentStatusEventNotification(sending));
 		}
 	}
