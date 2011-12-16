@@ -86,6 +86,9 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		
 		this.requestJobProcessor = new PaymentJobProcessor(this);
 		this.requestJobProcessor.start();
+		
+		this.responseJobProcessor = new PaymentJobProcessor(this);
+		this.responseJobProcessor.start();
 	}
 
 	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {
@@ -149,8 +152,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		return getProperty(PROPERTY_MODEM_SERIAL, SmsModemReference.class).getSerial();
 	}
 	public String getPin() {
-		PasswordString strPassowrd = getProperty(PROPERTY_PIN, PasswordString.class);
-		return strPassowrd.getValue();
+		return getProperty(PROPERTY_PIN, PasswordString.class).getValue();
 	}
 	public void setPin(final String pin) {
 		setProperty(PROPERTY_PIN, pin);
@@ -199,7 +201,6 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public StructuredProperties getPropertiesStructure() {
 		StructuredProperties p = new StructuredProperties();
 		p.put(PROPERTY_PIN, new PasswordString(""));
-		p.put(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
 		p.put(PROPERTY_MODEM_SERIAL, new SmsModemReference(null));
 		return p;
 	}
