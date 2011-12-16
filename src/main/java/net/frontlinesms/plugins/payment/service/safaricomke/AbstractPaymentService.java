@@ -125,25 +125,25 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	
 //> PERSISTENT PROPERTY ACCESSORS
 	public String getBalanceConfirmationCode() {
-		return getProperty(PROPERTY_BALANCE_CONFIRMATION_CODE, String.class);
+		return getProperty(PROPERTY_BALANCE_CONFIRMATION_CODE, "");
 	}
 	public void setBalanceAmount(BigDecimal balanceAmount) {
 		setProperty(PROPERTY_BALANCE_AMOUNT, balanceAmount);
 	}
 	public BigDecimal getBalanceAmount() {
-		return getProperty(PROPERTY_BALANCE_AMOUNT, BigDecimal.class);
+		return getProperty(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
 	}
 	public void setBalanceConfirmationCode(String balanceConfirmationCode) {
 		setProperty(PROPERTY_BALANCE_CONFIRMATION_CODE, balanceConfirmationCode);
 	}
 	public Date getBalanceDateTime() {
-		return new Date(getProperty(PROPERTY_BALANCE_DATE_TIME, Long.class));
+		return new Date(getProperty(PROPERTY_BALANCE_DATE_TIME, 0L));
 	}
 	public void setBalanceDateTime(Date balanceDateTime) {
 		setProperty(PROPERTY_BALANCE_DATE_TIME, balanceDateTime.getTime());
 	}
 	public String getBalanceUpdateMethod() {
-		return getProperty(PROPERTY_BALANCE_UPDATE_METHOD, String.class);
+		return getProperty(PROPERTY_BALANCE_UPDATE_METHOD, "");
 	}
 	public void setBalanceUpdateMethod(String balanceUpdateMethod) {
 		setProperty(PROPERTY_BALANCE_UPDATE_METHOD, balanceUpdateMethod);
@@ -233,6 +233,10 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		responseJobProcessor.queue(job);
 	}
 	
+	/** Gets a property from {@link #settings}.  This should be used for all non-user values. */
+	<T extends Object> T getProperty(String key, T defaultValue) {
+		return PersistableSettings.getPropertyValue(settings, key, defaultValue);
+	}
 	/** Gets a property from {@link #settings}. */
 	<T extends Object> T getProperty(String key, Class<T> clazz) {
 		return PersistableSettings.getPropertyValue(getPropertiesStructure(), settings, key, clazz);
