@@ -1,5 +1,6 @@
 package net.frontlinesms.plugins.payment.service.safaricomke;
 
+import net.frontlinesms.plugins.payment.service.safaricomke.dialog.PayBillSendDialogHandler;
 import net.frontlinesms.plugins.payment.service.ui.PaymentServiceUiActionHandler;
 import net.frontlinesms.ui.UiGeneratorController;
 
@@ -25,6 +26,6 @@ public class MpesaPersonalActionUiHandler implements PaymentServiceUiActionHandl
 	}
 	
 	public void launchPaybillWizard() {
-		ui.alert("Launch paybill wizard!");
+		new PayBillSendDialogHandler(ui, service).showDialog();
 	}
 }

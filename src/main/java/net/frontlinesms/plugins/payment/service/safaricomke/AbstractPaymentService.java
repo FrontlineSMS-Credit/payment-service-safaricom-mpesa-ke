@@ -86,16 +86,13 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		
 		this.requestJobProcessor = new PaymentJobProcessor(this);
 		this.requestJobProcessor.start();
-		
-		this.responseJobProcessor = new PaymentJobProcessor(this);
-		this.responseJobProcessor.start();
 	}
 
 	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {
 		// TODO is there a neater way to do this?
 		String serial = getModemSerial();
 		for(SmsModem m : pluginController.getUiGeneratorController().getFrontlineController().getSmsServiceManager().getSmsModems()) {
-			if(m.getSerial() == serial && m.isConnected()) {
+			if(m.getSerial().equals(serial) && m.isConnected()) {
 				return m.getCService();
 			}
 		}
@@ -152,7 +149,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		return getProperty(PROPERTY_MODEM_SERIAL, SmsModemReference.class).getSerial();
 	}
 	public String getPin() {
-		return getProperty(PROPERTY_PIN, String.class);
+		PasswordString strPassowrd = getProperty(PROPERTY_PIN, PasswordString.class);
+		return strPassowrd.getValue();
 	}
 	public void setPin(final String pin) {
 		setProperty(PROPERTY_PIN, pin);
@@ -201,6 +199,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public StructuredProperties getPropertiesStructure() {
 		StructuredProperties p = new StructuredProperties();
 		p.put(PROPERTY_PIN, new PasswordString(""));
+		p.put(PROPERTY_BALANCE_AMOUNT, new BigDecimal("0"));
 		p.put(PROPERTY_MODEM_SERIAL, new SmsModemReference(null));
 		return p;
 	}

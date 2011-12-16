@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<dialog bottom="9" close="removeDialog(this)" 
+	columns="3" gap="15" left="9" name="clientDetailsDialog"
+	right="9" text="Send KES to PayBill account"
+	top="9" resizable="true" modal="true" closable="true">
+	
+	<label text="Business Name:" />
+	<textfield name="businessName" colspan="2" columns="25" text="" />
+	<label text="Business Number:" />
+	<textfield name="businessNo" colspan="2" columns="25" text="" />
+	<label text="Account Number:" />
+	<textfield name="accountNo" colspan="2" columns="25" text="" />
+	<label text="Amount to Transfer" />
+	<textfield name="amountToTransfer" colspan="2" columns="25" text="" />
+
+	<panel colspan="3" weightx="1">
+		<panel weightx="1" />
+		<button icon="/icons/phone_send.png" text="Send"
+			action="sendPayment" />
+	</panel>
+</dialog>

@@ -15,7 +15,7 @@ import net.frontlinesms.events.FrontlineEventNotification;
 import net.frontlinesms.junit.BaseTestCase;
 import net.frontlinesms.messaging.sms.events.SmsModemStatusNotification;
 import net.frontlinesms.messaging.sms.modem.SmsModemStatus;
-import net.frontlinesms.test.smslib.SmsLibTestUtils;
+//import net.frontlinesms.test.smslib.SmsLibTestUtils;
 import net.frontlinesms.ui.UiGeneratorController;
 
 import org.apache.log4j.Logger;
@@ -64,7 +64,7 @@ public abstract class MpesaPaymentServiceLifeCycleTest<E extends MpesaPaymentSer
 		// Set Up Rules
 		when(pluginController.getLogMessageDao()).thenReturn(logMessageDao);
 		when(pluginController.getUiGeneratorController()).thenReturn(ui);
-		mpesaPaymentService.initDaosAndServices(pluginController);
+		mpesaPaymentService.init(pluginController);
 	}
 
 	public void startPaymentServicetest() throws SMSLibDeviceException,
