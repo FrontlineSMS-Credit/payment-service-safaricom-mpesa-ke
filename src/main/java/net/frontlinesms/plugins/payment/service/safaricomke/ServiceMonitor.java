@@ -12,7 +12,7 @@ import net.frontlinesms.messaging.sms.modem.SmsModemStatus;
 import net.frontlinesms.plugins.payment.monitor.PaymentServiceMonitor;
 import net.frontlinesms.plugins.payment.service.PaymentServiceStartRequest;
 
-public class SafaricomKeServiceMonitor implements PaymentServiceMonitor {
+public class ServiceMonitor implements PaymentServiceMonitor {
 	private EventBus eventBus;
 	private PaymentServiceSettingsDao settingsDao;
 	

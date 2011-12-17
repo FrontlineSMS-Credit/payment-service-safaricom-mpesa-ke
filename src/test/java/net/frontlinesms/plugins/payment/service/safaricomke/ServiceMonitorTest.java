@@ -16,8 +16,8 @@ import net.frontlinesms.plugins.payment.service.PaymentServiceStartRequest;
 
 import static org.mockito.Mockito.*;
 
-/** Tests for {@link SafaricomKeServiceMonitor} */
-public class SafaricomKeServiceMonitorTest extends BaseTestCase {
+/** Tests for {@link ServiceMonitor} */
+public class ServiceMonitorTest extends BaseTestCase {
 	/** Object under test */
 	private PaymentServiceMonitor m;
 	private EventBus eventBus;
@@ -25,7 +25,7 @@ public class SafaricomKeServiceMonitorTest extends BaseTestCase {
 	
 	@Override
 	protected void setUp() throws Exception {
-		m = new SafaricomKeServiceMonitor();
+		m = new ServiceMonitor();
 
 		eventBus = mock(EventBus.class);
 		settingsDao = mock(PaymentServiceSettingsDao.class);

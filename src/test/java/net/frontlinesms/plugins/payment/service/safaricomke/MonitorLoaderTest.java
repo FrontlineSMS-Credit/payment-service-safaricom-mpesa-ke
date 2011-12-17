@@ -9,6 +9,6 @@ import net.frontlinesms.plugins.payment.monitor.PaymentServiceMonitorImplementat
 public class MonitorLoaderTest extends BaseTestCase {
 	public void testMonitorLoading() {
 		List<Class<? extends PaymentServiceMonitor>> services = new PaymentServiceMonitorImplementationLoader().getAll();
-		assertTrue(services.contains(SafaricomKeServiceMonitor.class));
+		assertTrue(services.contains(ServiceMonitor.class));
 	}
 }
