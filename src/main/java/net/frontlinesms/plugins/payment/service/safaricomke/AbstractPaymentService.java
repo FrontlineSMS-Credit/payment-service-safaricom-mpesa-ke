@@ -51,6 +51,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected static final String PROPERTY_BALANCE_DATE_TIME = PROPERTY_PREFIX + "balance.timestamp";
 	protected static final String PROPERTY_BALANCE_UPDATE_METHOD = PROPERTY_PREFIX + "balance.update.method";
 	protected static final String PROPERTY_MODEM_SERIAL = PROPERTY_PREFIX + "modem.serial";
+	protected static final String PROPERTY_SIM_IMSI = PROPERTY_PREFIX + "sim.imsi";
 	
 //> INSTANCE PROPERTIES
 	protected Logger log = FrontlineUtils.getLogger(this.getClass());
@@ -157,6 +158,15 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public void setPin(final String pin) {
 		setProperty(PROPERTY_PIN, pin);
 	}
+	
+	public String getSimImsi() {
+		return getProperty(PROPERTY_SIM_IMSI, String.class);
+	}
+	
+	public void setSimImsi(String simImsi) {
+		setProperty(PROPERTY_SIM_IMSI, simImsi);
+	}
+	
 	void updateBalance(BigDecimal amount, String confirmationCode, Date timestamp, String method) {
 		setBalanceAmount(amount);
 		setBalanceConfirmationCode(confirmationCode);
