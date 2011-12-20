@@ -88,8 +88,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.requestJobProcessor = new PaymentJobProcessor(this);
 		this.requestJobProcessor.start();
 		
-		this.responseJobProcessor = new PaymentJobProcessor(this);
-		this.responseJobProcessor.start();
+//		this.responseJobProcessor = new PaymentJobProcessor(this);
+//		this.responseJobProcessor.start();
 	}
 
 	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {

@@ -62,8 +62,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			throws PaymentServiceException {
 		final CService cService = super.cService;
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
-		queueRequestJob(new PaymentJob() {
-			public void run() {
+//		queueRequestJob(new PaymentJob() {
+//			public void run() {
 				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException,
@@ -143,8 +143,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					}
 					updateStatus(PaymentStatus.ERROR);
 				}
-			}
-		});
+//			}
+//		});
 	}
 	
 	@Override
@@ -155,7 +155,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	protected void processMessage(final FrontlineMessage message) {
 		if (message.getEndpointId() != null) {
-			if(getModemSerial().equals(message.getEndpointId())) {
+			//if(getModemSerial().equals(message.getEndpointId())) {
+			if(true) {
 				if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
 				} else if (isFailedMpesaPayment(message)) {
