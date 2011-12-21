@@ -105,7 +105,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected void initIfRequired() throws SMSLibDeviceException, IOException {
 		// For now, we assume that init is always required.  If there is a clean way
 		// of identifying when it is and is not, we should perhaps implement this.
-		this.cService.getAtHandler().stkInit();
+		cService.getAtHandler().stkInit();
 	}
 	
 //> INSTANCE (TRANSIENT) ACCESSORS
@@ -174,11 +174,13 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		if(cService == null) throw new PaymentServiceException("Cannot start payment service with null CService.");
 		queueRequestJob(new PaymentJob() {
 			public void run() {
-				try{
+				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException, IOException {
 							updateStatus(PaymentStatus.CONFIGURE_STARTED);
-							cService.getAtHandler().stkInit();
+							if(cService.supportsStk()) {
+								cService.getAtHandler().stkInit();
+							}
 							updateStatus(PaymentStatus.CONFIGURE_COMPLETE);
 							return null;
 						}
