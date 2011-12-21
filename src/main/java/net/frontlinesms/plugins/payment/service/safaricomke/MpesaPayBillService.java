@@ -31,7 +31,7 @@ public class MpesaPayBillService extends MpesaPaymentService {
 		+ "Time: ([0-2]\\d|[3][0-1])/(0[1-9]|1[0-2])/(20[1][1-2]) (([2][0-3]|[0-1]\\d):([0-5]\\d):([0-5]\\d))";
 	
 	public boolean isOutgoingPaymentEnabled() {
-		return false;
+		return super.isOutgoingPaymentEnabled();
 	}
 	
 	@Override
