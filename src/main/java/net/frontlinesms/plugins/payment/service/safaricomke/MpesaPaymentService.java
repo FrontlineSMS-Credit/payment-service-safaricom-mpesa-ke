@@ -206,8 +206,8 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 
 	private void processIncomingPayment(final FrontlineMessage message) {
 		// TODO this method is ridiculously long
-//		queueResponseJob(new PaymentJob() {
-//			public void run() {
+		queueResponseJob(new PaymentJob() {
+			public void run() {
 				try {
 					final IncomingPayment payment = new IncomingPayment();
 					// retrieve applicable account if the client exists
@@ -321,8 +321,8 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					updateStatus(PaymentStatus.ERROR);
 					throw new RuntimeException(ex);
 				}
-//			}
-//		});
+			}
+		});
 	}
 	
 	private void processReversePayment(final FrontlineMessage message) {
@@ -350,13 +350,13 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	protected void processBalance(final FrontlineMessage message){
-//		queueResponseJob(new PaymentJob() {
-//			public void run() {
+		queueResponseJob(new PaymentJob() {
+			public void run() {
 				performBalanceEnquiryFraudCheck(message);
 				logDao.saveLogMessage(
 						new LogMessage(LogMessage.LogLevel.INFO,"Check Balance Response",message.getEndpointId() + ": " + message.getTextContent()));
-//			}
-//		});
+			}
+		});
 	}
 	
 	private void performPaymentReversalFraudCheck(String confirmationCode, BigDecimal amountPaid, BigDecimal actualBalance, final FrontlineMessage message) {

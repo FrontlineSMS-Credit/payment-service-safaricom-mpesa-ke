@@ -55,15 +55,15 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	
 //> INSTANCE METHODS
 	public boolean isOutgoingPaymentEnabled() {
-		return true;
+		return super.isOutgoingPaymentEnabled();
 	}
 	
 	public void makePayment(final OutgoingPayment outgoingPayment)
 			throws PaymentServiceException {
 		final CService cService = super.cService;
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
-//		queueRequestJob(new PaymentJob() {
-//			public void run() {
+		queueRequestJob(new PaymentJob() {
+			public void run() {
 				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
 						public Object run() throws SMSLibDeviceException,
@@ -143,8 +143,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					}
 					updateStatus(PaymentStatus.ERROR);
 				}
-//			}
-//		});
+			}
+		});
 	}
 	
 	@Override

@@ -52,6 +52,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected static final String PROPERTY_BALANCE_UPDATE_METHOD = PROPERTY_PREFIX + "balance.update.method";
 	protected static final String PROPERTY_MODEM_SERIAL = PROPERTY_PREFIX + "modem.serial";
 	protected static final String PROPERTY_SIM_IMSI = PROPERTY_PREFIX + "sim.imsi";
+	protected static final String PROPERTY_OUTGOING_ENABLED = PROPERTY_PREFIX + "outgoing.enabled";
 	
 //> INSTANCE PROPERTIES
 	protected Logger log = FrontlineUtils.getLogger(this.getClass());
@@ -88,8 +89,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.requestJobProcessor = new PaymentJobProcessor(this);
 		this.requestJobProcessor.start();
 		
-//		this.responseJobProcessor = new PaymentJobProcessor(this);
-//		this.responseJobProcessor.start();
+		this.responseJobProcessor = new PaymentJobProcessor(this);
+		this.responseJobProcessor.start();
 	}
 
 	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {
@@ -159,6 +160,14 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		setProperty(PROPERTY_PIN, pin);
 	}
 	
+	public boolean isOutgoingPaymentEnabled() {
+		return getProperty(PROPERTY_OUTGOING_ENABLED, Boolean.class);
+	}
+
+	public void setOutgoingPaymentEnabled(boolean outgoingEnabled) {
+		this.settings.set(PROPERTY_OUTGOING_ENABLED, outgoingEnabled);
+	}
+	
 	public String getSimImsi() {
 		return getProperty(PROPERTY_SIM_IMSI, String.class);
 	}
@@ -212,6 +221,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		StructuredProperties p = new StructuredProperties();
 		p.put(PROPERTY_PIN, new PasswordString(""));
 		p.put(PROPERTY_MODEM_SERIAL, new SmsModemReference(null));
+		p.put(PROPERTY_OUTGOING_ENABLED, true);
 		return p;
 	}
 
