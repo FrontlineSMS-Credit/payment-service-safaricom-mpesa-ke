@@ -161,8 +161,6 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					processOutgoingPayment(message);
 				} else if (isFailedMpesaPayment(message)) {
 					logDao.error("Payment Message: Failed message",message.getTextContent());
-				} else if (isValidOutgoingPaymentConfirmation(message)) {
-					processOutgoingPayment(message);
 				} else if (isBelowMinimumAmount(message)) {
 					reportBelowMinimumAmount();
 				} else if (isSentToSameAccountMessage(message)) {	
@@ -326,11 +324,11 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			BigDecimal expectedBalance = (tempBalanceAmount
 				.subtract(outgoingPayment.getAmountPaid().add(transactionFees))).setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
-		informUserOfFraudIfCommitted(expectedBalance, currentBalance,
-				message.getTextContent());
-
 		updateBalance(currentBalance, outgoingPayment.getConfirmationCode(),
 				new Date(outgoingPayment.getTimeConfirmed()), "Outgoing Payment");
+		
+		informUserOfFraudIfCommitted(expectedBalance, currentBalance,
+				message.getTextContent());
 	}
 
 	private boolean isValidOutgoingPaymentConfirmation(FrontlineMessage message) {
