@@ -53,6 +53,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected static final String PROPERTY_MODEM_SERIAL = PROPERTY_PREFIX + "modem.serial";
 	protected static final String PROPERTY_SIM_IMSI = PROPERTY_PREFIX + "sim.imsi";
 	protected static final String PROPERTY_OUTGOING_ENABLED = PROPERTY_PREFIX + "outgoing.enabled";
+	protected static final String PROPERTY_BALANCE_ENABLED = PROPERTY_PREFIX + "balance.enabled";
 	
 //> INSTANCE PROPERTIES
 	protected Logger log = FrontlineUtils.getLogger(this.getClass());
@@ -168,6 +169,14 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.settings.set(PROPERTY_OUTGOING_ENABLED, outgoingEnabled);
 	}
 	
+	public boolean isCheckBalanceEnabled() {
+		return getProperty(PROPERTY_BALANCE_ENABLED, Boolean.class);
+	}
+
+	public void setCheckBalanceEnabled(boolean checkBalanceEnabled) {
+		this.settings.set(PROPERTY_BALANCE_ENABLED, checkBalanceEnabled);
+	}
+	
 	public String getSimImsi() {
 		return getProperty(PROPERTY_SIM_IMSI, String.class);
 	}
@@ -224,6 +233,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		p.put(PROPERTY_PIN, new PasswordString(""));
 		p.put(PROPERTY_MODEM_SERIAL, new SmsModemReference(null));
 		p.put(PROPERTY_OUTGOING_ENABLED, true);
+		p.put(PROPERTY_BALANCE_ENABLED, true);
 		return p;
 	}
 
