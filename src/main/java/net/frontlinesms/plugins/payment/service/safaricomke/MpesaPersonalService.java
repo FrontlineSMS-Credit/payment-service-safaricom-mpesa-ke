@@ -43,6 +43,19 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			"Failed. \nNot enough money in your M-PESA account to send Ksh[,|.|\\d]+.00. " +
 			"You must be able to pay the transaction fee as well as the requested " +
 			"amount.\nYour M-PESA balance is Ksh[,|.|\\d]+.00";
+	
+	private static final String OUTGOING_PAYMENT_INACTIVE_PAYBILL_REGEX  =
+		"Failed. M-PESA cannot  pay Ksh[,|.|\\d]+.00 " +
+		"to ([A-Za-z ]+).";
+	
+	private static final String OUTGOING_PAYMENT_TRANSACTION_FAILED = 
+		"The Pay Bill transaction is failed.";
+	
+	private static final String OUTGOING_PAYMENT_PAYBILL_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ " +
+			"sent to ([A-Za-z ]+) for account ([\\d]+) on " +
+			"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )" +
+			"New M-PESA balance is Ksh([,|.|\\d]+)";
+	
 	private static final String MPESA_PAYMENT_FAILURE_REGEX = "";
 	private static final String LESS_THAN_MINIMUM_AMOUNT = "Failed. The amount is less than minimum M-PESA money transfer value.";
 	private static final String OUTGOING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ "
@@ -52,6 +65,14 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	private static final String BALANCE_REGEX = "[A-Z0-9]+ Confirmed.\n"
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\n"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M))";
+	
+	
+	//BX94QN980 Confirmed. Ksh75.00 sent to ROY ONYANGO +254720330266 on 4/1/12 at 6:51 PM New M-PESA balance is Ksh34,255.00
+	
+	//BY03VU279 Confirmed. Ksh50.00 sent to Safaricom Post Paid for account 0720330266 on 6/1/12 at 10:17 AM
+	//New M-PESA balance is Ksh195.00.
+	
+	//Failed. M-PESA cannot  pay Ksh50.00 to KENYANS FOR KENYA. For more information call or SMS customer services on 234.
 	
 //> INSTANCE METHODS
 	public boolean isOutgoingPaymentEnabled() {
@@ -157,9 +178,13 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		if (message.getEndpointId() != null) {
 			//if(getModemSerial().equals(message.getEndpointId())) {
 			if(true) {
-				if (isValidOutgoingPaymentConfirmation(message)) {
-					processOutgoingPayment(message);
+				if (isValidOutgoingPaymentPayBillConfirmation(message)) {
+					processOutgoingPayBillPayment(message);
 				} else if (isFailedMpesaPayment(message)) {
+					logDao.error("Payment Message: Failed message",message.getTextContent());
+				} else if (isValidOutgoingPaymentConfirmation(message)) {
+					processOutgoingPayment(message);
+				} else if (isInactivePayBillAccount(message)) {
 					logDao.error("Payment Message: Failed message",message.getTextContent());
 				} else if (isBelowMinimumAmount(message)) {
 					reportBelowMinimumAmount();
@@ -266,16 +291,53 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					List<OutgoingPayment> outgoingPayments;
 					String phoneNumber = getPhoneNumber(message);
 					BigDecimal amount = getAmount(message);
-					if (phoneNumber.equals("")) {
-						//Paybill FIXME what?  why is there any mention of paybill here?
-						outgoingPayments = outgoingPaymentDao.getByAmountPaidForInactiveClient(
-								amount, OutgoingPayment.Status.UNCONFIRMED);
+					
+					if(phoneNumber.equals("")) {
 					} else {
 						outgoingPayments = outgoingPaymentDao.getByPhoneNumberAndAmountPaid(
 								phoneNumber, amount, OutgoingPayment.Status.UNCONFIRMED);
-					}
-					
 
+						if (!outgoingPayments.isEmpty()) {
+							final OutgoingPayment outgoingPayment = outgoingPayments.get(0);
+							outgoingPayment.setConfirmationCode(getConfirmationCode(message));
+							outgoingPayment.setTimeConfirmed(getTimePaid(message, true).getTime());
+							outgoingPayment.setStatus(OutgoingPayment.Status.CONFIRMED);
+							performOutgoingPaymentFraudCheck(message, outgoingPayment);
+
+							outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
+
+							logDao.info("Outgoing Confirmation Payment", message.getTextContent());
+						} else {
+							logDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message", message.getTextContent());
+						}	
+					}
+				} catch (IllegalArgumentException ex) {
+					ex.printStackTrace();
+					logDao.error("Outgoing Confirmation Payment: Message failed to parse; likely incorrect format", message.getTextContent());
+					throw new RuntimeException(ex);
+				} catch (Exception ex) {
+					logDao.error("Outgoing Confirmation Payment: Unexpected exception parsing outgoing payment SMS", message.getTextContent());
+					throw new RuntimeException(ex);
+				}
+			}
+		});
+	}
+
+	private void processOutgoingPayBillPayment(final FrontlineMessage message) {
+		queueResponseJob(new PaymentJob() {
+			public void run() {
+				try {
+					// Retrieve the corresponding outgoing payment with status
+					// UNCONFIRMED
+					List<OutgoingPayment> outgoingPayments;
+					String payBillName = getPayBillName(message);
+					String accountNo = getPayBillAccount(message);
+					BigDecimal amount = getAmount(message);
+					
+					outgoingPayments = outgoingPaymentDao.getOutgoingPaymentByAmountPayBillNameAndAccountNo(
+							payBillName, accountNo,
+							amount, OutgoingPayment.Status.UNCONFIRMED);
+					
 					if (!outgoingPayments.isEmpty()) {
 						final OutgoingPayment outgoingPayment = outgoingPayments.get(0);
 						outgoingPayment.setConfirmationCode(getConfirmationCode(message));
@@ -300,7 +362,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			}
 		});
 	}
-
+	
 	synchronized void performOutgoingPaymentFraudCheck(
 			final FrontlineMessage message,
 			final OutgoingPayment outgoingPayment) {
@@ -335,6 +397,14 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		return message.getTextContent().matches(OUTGOING_PAYMENT_REGEX);
 	}
 
+	private boolean isInactivePayBillAccount(FrontlineMessage message) {
+		return message.getTextContent().matches(OUTGOING_PAYMENT_INACTIVE_PAYBILL_REGEX);
+	}
+	//message.getTextContent().matches(OUTGOING_PAYMENT_TRANSACTION_FAILED)
+	private boolean isValidOutgoingPaymentPayBillConfirmation(FrontlineMessage message) {
+		return message.getTextContent().matches(OUTGOING_PAYMENT_PAYBILL_REGEX);
+	}
+	
 //>END - OUTGOING PAYMENT REGION
 
 	/*

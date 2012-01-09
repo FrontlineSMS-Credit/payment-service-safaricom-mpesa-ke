@@ -9,7 +9,6 @@ import java.util.List;
 
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.plugins.payment.service.safaricomke.MpesaPersonalService;
-
 import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 
 import static org.mockito.Mockito.*;

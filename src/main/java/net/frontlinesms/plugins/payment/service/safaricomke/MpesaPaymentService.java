@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 
+import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.Contact;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.plugins.payment.event.BalanceFraudNotification;
@@ -36,9 +37,10 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	protected static final String SENT_TO = " sent to";
 	protected static final String DATETIME_PATTERN = "d/M/yy hh:mm a";
 	protected static final String PHONE_PATTERN = "2547[\\d]{8}";
+	protected static final String PAYBILL_ACCOUNT_NAME = "sent to ([A-Za-z ]+)";
 	protected static final String CONFIRMATION_CODE_PATTERN = "[A-Z0-9]+ Confirmed.";
 	protected static final String PAID_BY_PATTERN = "([A-Za-z ]+)";
-	protected static final String ACCOUNT_NUMBER_PATTERN = "Account Number [\\d]+";
+	protected static final String ACCOUNT_NUMBER_PATTERN = "account [A-Z0-9]+";
 	protected static final String RECEIVED_FROM = "received from";
 	protected static final String WRONG_PIN_STR = "wrong PIN";
 	
@@ -70,8 +72,39 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		}
 	}
 	
+	
+	
 	public void sendAmountToPaybillAccount(final String businessName, final String businessNo, final String accountNo, final BigDecimal amount) {
+		//save outgoingpayment + create dummy client
+		Client client;
+		if (clientDao.getClientByPhoneNumber(businessNo) == null){
+			client = new Client(businessName,"",businessNo);
+			client.setActive(false);
+			clientDao.saveClient(client);
+		} else {
+			client = clientDao.getClientByPhoneNumber(businessNo);
+		}
+		
+		OutgoingPayment outgoingPayment = new OutgoingPayment();
+		outgoingPayment.setClient(client);
+		outgoingPayment.setAmountPaid(amount);
+		outgoingPayment.setTimePaid(Calendar.getInstance().getTime());
+		outgoingPayment.setNotes(accountNo);
+		outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
+		outgoingPayment.setPaymentId("");
+		outgoingPayment.setConfirmationCode("");
+		outgoingPayment.setPaymentServiceSettings(getSettings());
+		outgoingPayment.setPayBillPayment(true);
+
+		outgoingPaymentDao.saveOutgoingPayment(outgoingPayment);
+		
+		makePaymentToPaybillAccount(outgoingPayment);
+	}
+	
+	public void makePaymentToPaybillAccount(final OutgoingPayment outgoingPayment) {
+		
 		final CService cService = this.cService;
+		final BigDecimal amount = outgoingPayment.getAmountPaid();
 		queueRequestJob(new PaymentJob() {
 			public void run() {
 				try {
@@ -94,7 +127,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							}
 							
 							final StkResponse enterBusinessNumberResponse = cService.stkRequest(
-									enterBusinessNumberPrompt.getRequest(), businessNo);
+									enterBusinessNumberPrompt.getRequest(), outgoingPayment.getClient().getPhoneNumber());
 							
 							final StkResponse enterAccountNumberPrompt;
 							if (enterBusinessNumberResponse instanceof StkMenu) {
@@ -107,7 +140,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							
 							final StkResponse enterAccountNumberResponse = cService.stkRequest(
 										((StkValuePrompt) enterAccountNumberPrompt)
-												.getRequest(), accountNo
+												.getRequest(), outgoingPayment.getNotes()
 									);
 							if (!(enterAccountNumberResponse instanceof StkValuePrompt)) {
 								logDao.saveLogMessage(LogMessage.error(
@@ -133,27 +166,17 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							}
 							cService.stkRequest(((StkConfirmationPrompt) enterPinResponse).getRequest());
 
-							//save outgoingpayment + create dummy client
-							Client client;
-							if (clientDao.getClientByPhoneNumber(businessNo) == null){
-								client = new Client(businessName,"",businessNo);
-								client.setActive(false);
-								clientDao.saveClient(client);
-							} else {
-								client = clientDao.getClientByPhoneNumber(businessNo);
-							}
-						
-							OutgoingPayment outgoingPayment = new OutgoingPayment();
-							outgoingPayment.setClient(client);
-							outgoingPayment.setAmountPaid(amount);
-							outgoingPayment.setTimePaid(Calendar.getInstance().getTime());
-							outgoingPayment.setNotes("");
 							outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
-							outgoingPayment.setPaymentId("");
-							outgoingPayment.setConfirmationCode("");
-							outgoingPayment.setPaymentServiceSettings(getSettings());
+							logDao.info("Outgoing Payment", outgoingPayment.toStringForLogs());
+
+							try {
+								outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
+							} catch (DuplicateKeyException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							updateStatus(PaymentStatus.COMPLETE);
 							
-							outgoingPaymentDao.saveOutgoingPayment(outgoingPayment);
 							return null;
 						}
 					});
@@ -465,7 +488,25 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		}
 		return str;
 	}
-
+	
+	String getPayBillAccount(FrontlineMessage message) {
+		String accNumber = getFirstMatch(message, ACCOUNT_NUMBER_PATTERN);
+		return accNumber
+				.substring("account ".length());
+	}
+	
+	String getPayBillName(final FrontlineMessage message) {
+		String str;
+		try{
+			 str = getFirstMatch(message, PAYBILL_ACCOUNT_NAME).substring("sent to ".length());
+			 String splitName[] = str.split(" for account");
+			 str = splitName[0];
+		}catch(IllegalStateException ex){
+			str = "";
+		}
+		return str;
+	}
+	
 	String getConfirmationCode(final FrontlineMessage message) {
 		final String firstMatch = getFirstMatch(message, CONFIRMATION_CODE_PATTERN);
 		return firstMatch.replace(" Confirmed.", "").trim();
