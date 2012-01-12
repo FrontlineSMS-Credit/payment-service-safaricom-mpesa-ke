@@ -48,8 +48,10 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		"Failed. M-PESA cannot  pay Ksh[,|.|\\d]+.00 " +
 		"to ([A-Za-z ]+).";
 	
-	private static final String OUTGOING_PAYMENT_TRANSACTION_FAILED = 
-		"The Pay Bill transaction is failed.";
+	private static final String OUTGOING_PAYMENT_UNREGISTERED_USER_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ " +
+	"sent to (\\+254[\\d]{9}|[\\d|-]) on " +
+	"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )" +
+	"New M-PESA balance is Ksh([,|.|\\d]+)";
 	
 	private static final String OUTGOING_PAYMENT_PAYBILL_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ " +
 			"sent to ([A-Za-z ]+) for account ([\\d]+) on " +
@@ -66,6 +68,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\n"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M))";
 	
+	
+	//BU06JE425 Confirmed. Ksh500.00 sent to 254702216107 on 8/11/11 at 2:45PM. New M-PESA balance is Ksh1719.00.
 	
 	//BX94QN980 Confirmed. Ksh75.00 sent to ROY ONYANGO +254720330266 on 4/1/12 at 6:51 PM New M-PESA balance is Ksh34,255.00
 	
@@ -184,7 +188,10 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					logDao.error("Payment Message: Failed message",message.getTextContent());
 				} else if (isValidOutgoingPaymentConfirmation(message)) {
 					processOutgoingPayment(message);
-				} else if (isInactivePayBillAccount(message)) {
+				} else if (isValidOutgoingPaymentConfirmationForUnregisteredUser(message)) {
+					processOutgoingPayment(message);
+				}
+				else if (isInactivePayBillAccount(message)) {
 					logDao.error("Payment Message: Failed message",message.getTextContent());
 				} else if (isBelowMinimumAmount(message)) {
 					reportBelowMinimumAmount();
@@ -405,6 +412,9 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		return message.getTextContent().matches(OUTGOING_PAYMENT_PAYBILL_REGEX);
 	}
 	
+	private boolean isValidOutgoingPaymentConfirmationForUnregisteredUser(FrontlineMessage message) {
+		return message.getTextContent().matches(OUTGOING_PAYMENT_UNREGISTERED_USER_REGEX);
+	}
 //>END - OUTGOING PAYMENT REGION
 
 	/*

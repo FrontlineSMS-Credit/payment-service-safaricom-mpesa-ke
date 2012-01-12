@@ -70,11 +70,12 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected LogMessageDao logDao;
 	protected ContactDao contactDao;
 	private PersistableSettings settings;
+	private PaymentViewPluginController pluginController;
 	
 //> CONSTRUCTORS AND INITIALISERS
 	public void init(PaymentViewPluginController pluginController) throws PaymentServiceException {
 		setCService(getCService(pluginController));
-		
+		this.pluginController = pluginController;
 		this.accountDao = pluginController.getAccountDao();
 		this.clientDao = pluginController.getClientDao();
 		this.outgoingPaymentDao = pluginController.getOutgoingPaymentDao();
@@ -294,9 +295,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		}
 	}
 	
-	void updateStatus(PaymentStatus sending) {
-		if (eventBus != null) {
-			eventBus.notifyObservers(new PaymentStatusEventNotification(sending));
-		}
+	void updateStatus(PaymentStatus status) {
+		pluginController.updateStatusBar(status.toString());
 	}
 }

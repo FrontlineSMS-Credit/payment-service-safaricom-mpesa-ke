@@ -316,6 +316,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 						payment.setPaymentBy(getPaymentBy(message));
 						payment.setTimePaid(getTimePaid(message));
 						payment.setServiceSettings(getSettings());
+						payment.setNotes(getPayBillAccount(message));
 						
 						performIncominPaymentFraudCheck(message, payment);
 						incomingPaymentDao.saveIncomingPayment(payment);
