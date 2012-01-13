@@ -15,7 +15,6 @@ import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.events.FrontlineEventNotification;
 import net.frontlinesms.messaging.sms.modem.SmsModem;
-import net.frontlinesms.plugins.payment.event.PaymentStatusEventNotification;
 import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentJobProcessor;
 import net.frontlinesms.plugins.payment.service.PaymentService;

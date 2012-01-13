@@ -18,6 +18,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import net.frontlinesms.FrontlineSMS;
@@ -28,6 +29,8 @@ import net.frontlinesms.data.events.EntitySavedNotification;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.junit.BaseTestCase;
+import net.frontlinesms.messaging.sms.SmsServiceManager;
+import net.frontlinesms.messaging.sms.modem.SmsModem;
 import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.safaricomke.AbstractPaymentService;
@@ -92,7 +95,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected E mpesaPaymentService;
 	protected Logger logger;
 	private PaymentViewPluginController pluginController;
-	
+	private EventBus eventBus;
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -105,7 +108,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		this.aTHandler = mock(CATHandler_Wavecom_Stk.class);
 		when(cService.getAtHandler()).thenReturn(aTHandler);
 		mpesaPaymentService.setCService(cService);
-
+		
 		mpesaPaymentService.setSettings(mockSettings(
 				AbstractPaymentService.PROPERTY_PIN, TEST_PIN,
 				AbstractPaymentService.PROPERTY_MODEM_SERIAL, "093SH5S655",
@@ -181,15 +184,27 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		clientDao = mock(ClientDao.class);
 		accountDao = mock(AccountDao.class);
 		targetAnalytics = mock(TargetAnalytics.class);
+		eventBus = mock(EventBus.class);
+		
 		when(targetAnalytics.getStatus(anyLong())).thenReturn(TargetAnalytics.Status.PAYING);
 		
 		pluginController = mock(PaymentViewPluginController.class);
 		ui = mock(UiGeneratorController.class);
 		
 		FrontlineSMS fsms = mock(FrontlineSMS.class);
+		SmsServiceManager smsSrvsManager = mock(SmsServiceManager.class);
+		SmsModem smsModem = mock(SmsModem.class);
+		
+		List<SmsModem> smsModems = new ArrayList<SmsModem>();
+		smsModems.add(smsModem);
+		
 		EventBus eventBus = mock(EventBus.class);
 		when(fsms.getEventBus()).thenReturn(eventBus);
 		when(ui.getFrontlineController()).thenReturn(fsms);
+		when(ui.getFrontlineController().getSmsServiceManager()).thenReturn(smsSrvsManager);
+		when(ui.getFrontlineController().getSmsServiceManager().getSmsModems()).thenReturn(smsModems);
+		when(smsModem.getSerial()).thenReturn("093SH5S655");
+		when(smsModem.isConnected()).thenReturn(true);
 		
 		//Set Up Rules
 		when(pluginController.getAccountDao()).thenReturn(accountDao);
@@ -200,6 +215,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(pluginController.getClientDao()).thenReturn(clientDao);
 		when(pluginController.getUiGeneratorController()).thenReturn(ui);
 		when(pluginController.getTargetAnalytics()).thenReturn(targetAnalytics);
+		when(pluginController.getEventBus()).thenReturn(eventBus);
 		
 		mpesaPaymentService.init(pluginController);
 		
@@ -234,7 +250,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	public void testCheckBalance() throws PaymentServiceException, SMSLibDeviceException, IOException  {
 		// given
 		StkRequest myAccountMenuItemRequest = mpesaMenu.getRequest("My account");
-		
+		mpesaPaymentService.setCService(this.cService);
 		StkMenuItem showBalanceMenuItem = mockMenuItem("Show balance");
 
 		StkMenu myAccountMenu =	new StkMenu("My account", showBalanceMenuItem, "Call support",
@@ -406,6 +422,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		payment.setTimeConfirmed(getTimestamp(datetime).getTime());
 		payment.setStatus(status);
 		payment.setPaymentServiceSettings(mpesaPaymentService.getSettings());
+		
 		when(outgoingPaymentDao.getByPhoneNumberAndAmountPaid(phoneNo, new BigDecimal(amount), status)).
 				thenReturn(Arrays.asList(payment));
 		

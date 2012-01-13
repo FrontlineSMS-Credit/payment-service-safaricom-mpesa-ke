@@ -13,6 +13,7 @@ import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.PaymentStatus;
 
+import org.apache.log4j.Logger;
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
 import org.creditsms.plugins.paymentview.data.domain.Client;
@@ -32,6 +33,7 @@ import org.smslib.stk.StkValuePrompt;
 
 public abstract class MpesaPaymentService extends AbstractPaymentService {
 //> REGEX PATTERN CONSTANTS
+	protected Logger logger;
 	protected static final String AMOUNT_PATTERN = "Ksh[,|.|\\d]+";
 	protected static final String AMOUNT_PATTERN_WITHOUT_DOT = "Ksh[,\\d]+";
 	protected static final String SENT_TO = " sent to";
