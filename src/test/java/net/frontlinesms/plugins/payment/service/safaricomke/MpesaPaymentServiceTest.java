@@ -28,6 +28,7 @@ import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.data.events.EntitySavedNotification;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
+import net.frontlinesms.events.FrontlineEventNotification;
 import net.frontlinesms.junit.BaseTestCase;
 import net.frontlinesms.messaging.sms.SmsServiceManager;
 import net.frontlinesms.messaging.sms.modem.SmsModem;
@@ -35,6 +36,7 @@ import net.frontlinesms.plugins.payment.service.PaymentJob;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.safaricomke.AbstractPaymentService;
 import net.frontlinesms.plugins.payment.service.safaricomke.MpesaPaymentService;
+import net.frontlinesms.serviceconfig.PasswordString;
 import net.frontlinesms.ui.UiGeneratorController;
 
 import org.apache.log4j.Logger;
@@ -50,6 +52,7 @@ import org.creditsms.plugins.paymentview.data.repository.ClientDao;
 import org.creditsms.plugins.paymentview.data.repository.IncomingPaymentDao;
 import org.creditsms.plugins.paymentview.data.repository.LogMessageDao;
 import org.creditsms.plugins.paymentview.data.repository.OutgoingPaymentDao;
+import org.creditsms.plugins.paymentview.data.repository.PaymentServiceSettingsDao;
 import org.creditsms.plugins.paymentview.data.repository.TargetDao;
 import org.mockito.InOrder;
 import org.smslib.CService;
@@ -96,6 +99,8 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected Logger logger;
 	private PaymentViewPluginController pluginController;
 	private EventBus eventBus;
+	private PaymentServiceSettingsDao settingsDao;
+	
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -108,10 +113,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		this.cService = SmsLibTestUtils.mockCService();
 		this.aTHandler = mock(CATHandler_Wavecom_Stk.class);
 		when(cService.getAtHandler()).thenReturn(aTHandler);
-		mpesaPaymentService.setCService(cService);
 		
 		mpesaPaymentService.setSettings(mockSettings(
-				AbstractPaymentService.PROPERTY_PIN, TEST_PIN,
+				AbstractPaymentService.PROPERTY_PIN, new PasswordString(TEST_PIN),
 				AbstractPaymentService.PROPERTY_MODEM_SERIAL, "093SH5S655",
 				AbstractPaymentService.PROPERTY_BALANCE_AMOUNT, new BigDecimal("200"),
 				AbstractPaymentService.PROPERTY_BALANCE_UPDATE_METHOD, "balance enquiry",
@@ -131,6 +135,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				sendMoneyMenuItem , "Withdraw cash", "Buy airtime",
 				"Pay Bill", "Buy Goods", "ATM Withdrawal", myAccountMenuItem);
 		when(cService.stkRequest(mpesaMenuItemRequest)).thenReturn(mpesaMenu);
+		mpesaPaymentService.setCService(cService);
 	}
 	
 	private PersistableSettings mockSettings(Object... settingsAndValues) {
@@ -185,7 +190,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		clientDao = mock(ClientDao.class);
 		accountDao = mock(AccountDao.class);
 		targetAnalytics = mock(TargetAnalytics.class);
-		eventBus = mock(EventBus.class);
+		settingsDao = mock(PaymentServiceSettingsDao.class);
 		
 		when(targetAnalytics.getStatus(anyLong())).thenReturn(TargetAnalytics.Status.PAYING);
 		
@@ -199,7 +204,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		List<SmsModem> smsModems = new ArrayList<SmsModem>();
 		smsModems.add(smsModem);
 		
-		EventBus eventBus = mock(EventBus.class);
+		eventBus = mock(EventBus.class);
 		when(fsms.getEventBus()).thenReturn(eventBus);
 		when(ui.getFrontlineController()).thenReturn(fsms);
 		when(ui.getFrontlineController().getSmsServiceManager()).thenReturn(smsSrvsManager);
@@ -217,6 +222,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(pluginController.getUiGeneratorController()).thenReturn(ui);
 		when(pluginController.getTargetAnalytics()).thenReturn(targetAnalytics);
 		when(pluginController.getEventBus()).thenReturn(eventBus);
+		when(pluginController.getPaymentServiceSettingsDao()).thenReturn(settingsDao);
 		
 		mpesaPaymentService.init(pluginController);
 		
@@ -263,10 +269,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(cService.stkRequest(showBalanceMenuItemRequest)).thenReturn(pinRequired);
 		
 		// when
-		mpesaPaymentService.setCService(this.cService);
 		mpesaPaymentService.checkBalance();
 		
-		waitForRequestJob();
+		waitForOutgoingJob();
 		//Mock for StkRequest, hashCode: 18402106,Mock for StkRequest, hashCode: 18402106
 		// then
 		InOrder inOrder = inOrder(cService);
@@ -295,10 +300,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(cService.stkRequest(pinRequiredRequest, TEST_PIN)).thenReturn(pinRequiredResponse);
 		
 		// when
-		mpesaPaymentService.setCService(this.cService);
 		mpesaPaymentService.makePayment(getOutgoingPayment(CLIENT_1));
 		
-		waitForRequestJob();
+		waitForOutgoingJob();
 		
 		// then
 		InOrder inOrder = inOrder(cService);
@@ -328,11 +332,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		assertTrue(mpesaPaymentService instanceof EventObserver);
 		
 		// when
-		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
+		notifyAndWait_incoming(mockMessageNotification("MPESA", messageText));
 		
 		// then
-		waitForRequestJob();
-		
 		verify(incomingPaymentDao).getByConfirmationCode(reversedConfirmationCode);
 		verify(incomingPaymentDao).updateIncomingPayment(new IncomingPayment() {
 			@Override
@@ -371,7 +373,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		// when
 		mpesaPaymentService.sendAmountToPaybillAccount("ZUKU","320320","68949", new BigDecimal(100));
 		
-		waitForRequestJob();
+		waitForOutgoingJob();
 		
 		// then
 		InOrder inOrder = inOrder(cService);
@@ -388,9 +390,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		assertTrue(mpesaPaymentService instanceof EventObserver);
 		
 		// when
-		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
+		notifyAndWait_incoming(mockMessageNotification("MPESA", messageText));
 		
-		waitForResponseJob();
+		// then
 		verify(incomingPaymentDao).saveIncomingPayment(new IncomingPayment() {
 			@Override
 			public boolean equals(Object that) {
@@ -429,10 +431,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				thenReturn(Arrays.asList(payment));
 		
 		// when
-		mpesaPaymentService.notify(mockMessageNotification("MPESA", messageText));
+		notifyAndWait_outgoing(mockMessageNotification("MPESA", messageText));
 		
 		// then
-		waitForResponseJob();
 		verify(outgoingPaymentDao).updateOutgoingPayment(payment);
 	}
 	
@@ -442,9 +443,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		
 		assertTrue(mpesaPaymentService.isValidBalanceMessage(message));
 		
-		mpesaPaymentService.notify(new EntitySavedNotification<FrontlineMessage>(message));
-		
-		waitForRequestJob();
+		notifyAndWait_incoming(new EntitySavedNotification<FrontlineMessage>(message));
 		
 		assertEquals(new BigDecimal(amount), mpesaPaymentService.getBalanceAmount());
 		assertEquals(confirmationMessage, mpesaPaymentService.getBalanceConfirmationCode());
@@ -466,10 +465,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	}
 	
 	protected void testIncomingPaymentProcessorIgnoresMessage(String fromNumber, String messageText) {
-		mpesaPaymentService.notify(mockMessageNotification(fromNumber, messageText));
+		notifyAndWait_incoming(mockMessageNotification(fromNumber, messageText));
 		
 		// then
-		waitForRequestJob();
 		verify(incomingPaymentDao, never()).saveIncomingPayment(any(IncomingPayment.class));
 	}
 	
@@ -500,15 +498,21 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	}
 	
 	private void testFakedIncomingPayment(String from, String messageText) {
-		// setup
-		MpesaPaymentService s = this.mpesaPaymentService;
-		
 		// when
-		s.notify(mockMessageNotification(from, messageText));
+		notifyAndWait_incoming(mockMessageNotification(from, messageText));
 		
 		// then
-		waitForRequestJob();
 		verify(incomingPaymentDao, never()).saveIncomingPayment(any(IncomingPayment.class));
+	}
+	
+	private void notifyAndWait_incoming(FrontlineEventNotification notification) {
+		mpesaPaymentService.notify(notification);
+		waitForIncomingJob();
+	}
+	
+	private void notifyAndWait_outgoing(FrontlineEventNotification notification) {
+		mpesaPaymentService.notify(notification);
+		waitForOutgoingJob();
 	}
 	
 	private StkMenuItem mockMenuItem(String title, int... numbers) {
@@ -570,11 +574,11 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		return new HashSet<Account>(accounts);
 	}
 
-	private void waitForRequestJob() {
+	private void waitForIncomingJob() {
 		WaitingJob.waitForEvent(mpesaPaymentService, true);
 	}
 
-	private void waitForResponseJob() {
+	private void waitForOutgoingJob() {
 		WaitingJob.waitForEvent(mpesaPaymentService, false);
 	}
 }
@@ -588,10 +592,10 @@ class WaitingJob implements PaymentJob {
 		this.s = s;
 	}
 	
-	private void block(boolean requestJob) {
+	private void block(boolean incomingJob) {
 		running = true;
-		if(requestJob) s.queueRequestJob(this);
-		else s.queueResponseJob(this);
+		if(incomingJob) s.queueIncomingJob(this);
+		else s.queueOutgoingJob(this);
 		while(running) {
 			try {
 				Thread.sleep(200);
@@ -606,7 +610,7 @@ class WaitingJob implements PaymentJob {
 	}
 	
 	/** Put a job on the UI event queue, and block until it has been run. */
-	public static void waitForEvent(MpesaPaymentService s, boolean requestJob) {
-		new WaitingJob(s).block(requestJob);
+	public static void waitForEvent(MpesaPaymentService s, boolean incomingJob) {
+		new WaitingJob(s).block(incomingJob);
 	}
 }

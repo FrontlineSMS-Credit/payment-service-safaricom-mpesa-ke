@@ -60,8 +60,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected TargetAnalytics targetAnalytics;
 	protected CService cService;
 	protected EventBus eventBus;
-	protected PaymentJobProcessor requestJobProcessor;
-	protected PaymentJobProcessor responseJobProcessor;
+	protected PaymentJobProcessor outgoingJobProcessor;
+	protected PaymentJobProcessor incomingJobProcessor;
 	protected AccountDao accountDao;
 	protected ClientDao clientDao;
 	protected TargetDao targetDao;
@@ -90,11 +90,11 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.eventBus = pluginController.getEventBus();
 		eventBus.registerObserver(this);
 		
-		this.requestJobProcessor = new PaymentJobProcessor(this);
-		this.requestJobProcessor.start();
+		this.incomingJobProcessor = new PaymentJobProcessor(this);
+		this.incomingJobProcessor.start();
 		
-		this.responseJobProcessor = new PaymentJobProcessor(this);
-		this.responseJobProcessor.start();
+		this.outgoingJobProcessor = new PaymentJobProcessor(this);
+		this.outgoingJobProcessor.start();
 	}
 	
 	public void setLog(Logger log) {
@@ -208,7 +208,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public void startService() throws PaymentServiceException {
 		final CService cService = this.cService;
 		if(cService == null) throw new PaymentServiceException("Cannot start payment service with null CService.");
-		queueRequestJob(new PaymentJob() {
+		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
@@ -232,8 +232,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 
 	public void stopService() {
 		eventBus.unregisterObserver(this);
-		requestJobProcessor.stop();
-		responseJobProcessor.stop();
+		incomingJobProcessor.stop();
+		outgoingJobProcessor.stop();
 	}
 
 	public StructuredProperties getPropertiesStructure() {
@@ -266,11 +266,11 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected abstract boolean isValidBalanceMessage(FrontlineMessage message);
 
 //> UTILITY METHODS
-	void queueRequestJob(PaymentJob job) {
-		requestJobProcessor.queue(job);
+	void queueIncomingJob(PaymentJob job) {
+		incomingJobProcessor.queue(job);
 	}
-	void queueResponseJob(PaymentJob job) {
-		responseJobProcessor.queue(job);
+	void queueOutgoingJob(PaymentJob job) {
+		outgoingJobProcessor.queue(job);
 	}
 	
 	/** Gets a property from {@link #settings}.  This should be used for all non-user values. */

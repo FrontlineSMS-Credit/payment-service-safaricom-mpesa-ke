@@ -87,7 +87,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			throws PaymentServiceException {
 		final CService cService = super.cService;
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
-		queueRequestJob(new PaymentJob() {
+		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
@@ -190,8 +190,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					processOutgoingPayment(message);
 				} else if (isValidOutgoingPaymentConfirmationForUnregisteredUser(message)) {
 					processOutgoingPayment(message);
-				}
-				else if (isInactivePayBillAccount(message)) {
+				} else if (isInactivePayBillAccount(message)) {
 					logDao.error("Payment Message: Failed message",message.getTextContent());
 				} else if (isBelowMinimumAmount(message)) {
 					reportBelowMinimumAmount();
@@ -222,7 +221,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 
 	private void reportInsufficientFunds(final FrontlineMessage message) {
-		queueResponseJob(new PaymentJob() {
+		queueIncomingJob(new PaymentJob() {
 			public void run() {
 				try {
 					// Retrieve the corresponding outgoing payment with status
@@ -255,7 +254,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 	
 	private void reportSentToSameAccount(final FrontlineMessage message) {
-		queueResponseJob(new PaymentJob() {
+		queueIncomingJob(new PaymentJob() {
 			public void run() {
 				try {
 					// Retrieve the corresponding outgoing payment with status
@@ -290,7 +289,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 	
 	private void processOutgoingPayment(final FrontlineMessage message) {
-		queueResponseJob(new PaymentJob() {
+		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
 					// Retrieve the corresponding outgoing payment with status
@@ -331,7 +330,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 
 	private void processOutgoingPayBillPayment(final FrontlineMessage message) {
-		queueResponseJob(new PaymentJob() {
+		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
 					// Retrieve the corresponding outgoing payment with status

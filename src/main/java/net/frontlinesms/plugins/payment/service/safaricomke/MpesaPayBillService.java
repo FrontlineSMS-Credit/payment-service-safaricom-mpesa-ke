@@ -45,7 +45,7 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	
 	@Override
 	Account getAccount(FrontlineMessage message) {
-		String accNumber = getFirstMatch(message, ACCOUNT_NUMBER_PATTERN);
+		String accNumber = getFirstMatch(message, "Account Number [A-Z0-9]*");
 		return accountDao.getAccountByAccountNumber(accNumber
 				.substring("Account Number ".length()));
 	}

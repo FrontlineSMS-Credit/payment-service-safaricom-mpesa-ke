@@ -42,7 +42,6 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	protected static final String PAYBILL_ACCOUNT_NAME = "sent to ([A-Za-z ]+)";
 	protected static final String CONFIRMATION_CODE_PATTERN = "[A-Z0-9]+ Confirmed.";
 	protected static final String PAID_BY_PATTERN = "([A-Za-z ]+)";
-	protected static final String ACCOUNT_NUMBER_PATTERN = "account [A-Z0-9]+";
 	protected static final String RECEIVED_FROM = "received from";
 	protected static final String WRONG_PIN_STR = "wrong PIN";
 	
@@ -107,7 +106,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		
 		final CService cService = this.cService;
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
-		queueRequestJob(new PaymentJob() {
+		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
@@ -193,7 +192,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	public void checkBalance() throws PaymentServiceException {
 		final String pin = getPin();
 		final CService cService = this.cService;
-		queueRequestJob(new PaymentJob() {
+		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
 					cService.doSynchronized(new SynchronizedWorkflow<Object>() {
@@ -246,7 +245,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 
 	private void processIncomingPayment(final FrontlineMessage message) {
 		// TODO this method is ridiculously long
-		queueResponseJob(new PaymentJob() {
+		queueIncomingJob(new PaymentJob() {
 			public void run() {
 				try {
 					IncomingPayment payment = new IncomingPayment();
@@ -343,7 +342,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	private void processReversePayment(final FrontlineMessage message) {
-		queueResponseJob(new PaymentJob() {
+		queueIncomingJob(new PaymentJob() {
 			public void run() {
 				try {
 					IncomingPayment incomingPayment = incomingPaymentDao.getByConfirmationCode(getReversedConfirmationCode(message));
@@ -359,7 +358,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					incomingPaymentDao.updateIncomingPayment(incomingPayment);
 					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.INFO,"Reverse Transaction",message.getTextContent()));
-				}catch (Exception e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
@@ -367,7 +366,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	protected void processBalance(final FrontlineMessage message){
-		queueResponseJob(new PaymentJob() {
+		queueIncomingJob(new PaymentJob() {
 			public void run() {
 				performBalanceEnquiryFraudCheck(message);
 				logDao.saveLogMessage(
@@ -381,8 +380,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		BigDecimal expectedBalance = tempBalance.subtract(amountPaid);
 		
 		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
-		updateBalance(actualBalance, getConfirmationCode(message), getTimePaid(message), "BalanceEnquiry");
-
+		updateBalance(actualBalance, getConfirmationCode(message), new Date(message.getDate()), "BalanceEnquiry");
 	}
 
 	private BigDecimal getReversedPaymentBalance(FrontlineMessage message) {
@@ -484,7 +482,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	String getPayBillAccount(FrontlineMessage message) {
-		String accNumber = getFirstMatch(message, ACCOUNT_NUMBER_PATTERN);
+		String accNumber = getFirstMatch(message, "account [A-Z0-9]+");
 		return accNumber
 				.substring("account ".length());
 	}
