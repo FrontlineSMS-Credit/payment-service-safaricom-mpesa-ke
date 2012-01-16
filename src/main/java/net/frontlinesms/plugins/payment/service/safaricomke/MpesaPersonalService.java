@@ -382,16 +382,17 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		BigDecimal amountPaid = outgoingPayment.getAmountPaid();
 		BigDecimal transactionFees = new BigDecimal(0);
 		BigDecimal currentBalance = getBalance(message).setScale(2, BigDecimal.ROUND_HALF_DOWN);
-			if (amountPaid.compareTo(new BigDecimal(100)) <= 0) {
-				transactionFees = new BigDecimal(10);
-			} else if (amountPaid.compareTo(new BigDecimal(35000)) <= 0) {
-				transactionFees = new BigDecimal(30);
-			} else {
-				transactionFees = new BigDecimal(60);
-			}
+		
+		if (amountPaid.compareTo(new BigDecimal(100)) <= 0) {
+			transactionFees = new BigDecimal(10);
+		} else if (amountPaid.compareTo(new BigDecimal(35000)) <= 0) {
+			transactionFees = new BigDecimal(30);
+		} else {
+			transactionFees = new BigDecimal(60);
+		}
 
-			BigDecimal expectedBalance = (tempBalanceAmount
-				.subtract(outgoingPayment.getAmountPaid().add(transactionFees))).setScale(2, BigDecimal.ROUND_HALF_DOWN);
+		BigDecimal expectedBalance = (tempBalanceAmount
+			.subtract(outgoingPayment.getAmountPaid().add(transactionFees))).setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
 		updateBalance(currentBalance, outgoingPayment.getConfirmationCode(),
 				new Date(outgoingPayment.getTimeConfirmed()), "Outgoing Payment");

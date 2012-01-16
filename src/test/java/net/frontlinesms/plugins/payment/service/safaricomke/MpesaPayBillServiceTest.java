@@ -17,9 +17,9 @@ public class MpesaPayBillServiceTest extends
 	public void testMakePayment(){
 		try{
 			mpesaPaymentService.makePayment(new OutgoingPayment());
-			assertFalse(true); // FIXME what exactly is this testing?
+			fail("Should not be able to make payment with PayBill service");
 		}catch (PaymentServiceException e) {
-			assertFalse(false); // FIXME what exactly is this testing?
+			// expected
 		}
 	}
 

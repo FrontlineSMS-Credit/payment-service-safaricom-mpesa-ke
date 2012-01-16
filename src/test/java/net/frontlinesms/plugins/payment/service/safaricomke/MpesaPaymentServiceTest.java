@@ -103,6 +103,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		this.logger = mock(Logger.class);
 
 		this.mpesaPaymentService = (E) createNewTestClass();
+		this.mpesaPaymentService.setLog(logger);
 		
 		this.cService = SmsLibTestUtils.mockCService();
 		this.aTHandler = mock(CATHandler_Wavecom_Stk.class);

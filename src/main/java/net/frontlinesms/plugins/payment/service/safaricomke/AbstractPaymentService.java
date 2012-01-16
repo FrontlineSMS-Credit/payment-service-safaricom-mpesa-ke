@@ -96,6 +96,10 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.responseJobProcessor = new PaymentJobProcessor(this);
 		this.responseJobProcessor.start();
 	}
+	
+	public void setLog(Logger log) {
+		this.log = log;
+	}
 
 	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {
 		// TODO is there a neater way to do this?
