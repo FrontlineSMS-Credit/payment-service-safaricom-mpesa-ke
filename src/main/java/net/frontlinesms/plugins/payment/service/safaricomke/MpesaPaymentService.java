@@ -228,28 +228,35 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 			}
 		});
 	}
+	
+	private IncomingPayment createIncomingPayment(Account account, Target tgt, FrontlineMessage message) {
+		IncomingPayment payment = new IncomingPayment();
+		
+		payment.setAccount(account);
+		payment.setTarget(tgt);
+		payment.setPhoneNumber(getPhoneNumber(message));
+		payment.setAmountPaid(getAmount(message));
+		payment.setConfirmationCode(getConfirmationCode(message));
+		payment.setPaymentBy(getPaymentBy(message));
+		payment.setTimePaid(getTimePaid(message));
+		payment.setServiceSettings(getSettings());
+		
+		return payment;
+	}
 
 	private void processIncomingPayment(final FrontlineMessage message) {
 		// TODO this method is ridiculously long
 		queueResponseJob(new PaymentJob() {
 			public void run() {
 				try {
-					final IncomingPayment payment = new IncomingPayment();
+					IncomingPayment payment = new IncomingPayment();
 					// retrieve applicable account if the client exists
 					Account account = getAccount(message);
 					updateStatus(PaymentStatus.RECEIVING);
 					if (account != null){
 						final Target tgt = targetDao.getActiveTargetByAccount(account.getAccountNumber());
 						if (tgt != null){//account is a non generic one
-							payment.setAccount(account);
-							payment.setTarget(tgt);
-							payment.setPhoneNumber(getPhoneNumber(message));
-							payment.setAmountPaid(getAmount(message));
-							payment.setConfirmationCode(getConfirmationCode(message));
-							payment.setPaymentBy(getPaymentBy(message));
-							payment.setTimePaid(getTimePaid(message));
-							payment.setServiceSettings(getSettings());
-							
+							payment = createIncomingPayment(account,tgt, message);
 							performIncominPaymentFraudCheck(message, payment);
 							incomingPaymentDao.saveIncomingPayment(payment);
 
@@ -266,15 +273,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							updateStatus(PaymentStatus.PROCESSED);
 						} else {
 							//account is a generic one(standard) or a non-generic without any active target(paybill)
-							payment.setAccount(account);
-							payment.setTarget(null);
-							payment.setPhoneNumber(getPhoneNumber(message));
-							payment.setAmountPaid(getAmount(message));
-							payment.setConfirmationCode(getConfirmationCode(message));
-							payment.setPaymentBy(getPaymentBy(message));
-							payment.setTimePaid(getTimePaid(message));
-							payment.setServiceSettings(getSettings());
-							
+							payment = createIncomingPayment(account,null, message);
 							performIncominPaymentFraudCheck(message, payment);
 							
 							incomingPaymentDao.saveIncomingPayment(payment);
@@ -309,15 +308,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							account = new Account(accountDao.createAccountNumber(), client, false, true);
 							accountDao.saveAccount(account);
 						}
-						
-						payment.setAccount(account);
-						payment.setTarget(null);
-						payment.setPhoneNumber(getPhoneNumber(message));
-						payment.setAmountPaid(getAmount(message));
-						payment.setConfirmationCode(getConfirmationCode(message));
-						payment.setPaymentBy(getPaymentBy(message));
-						payment.setTimePaid(getTimePaid(message));
-						payment.setServiceSettings(getSettings());
+						payment = createIncomingPayment(account,null, message);
 						payment.setNotes(getPayBillAccount(message));
 						
 						performIncominPaymentFraudCheck(message, payment);

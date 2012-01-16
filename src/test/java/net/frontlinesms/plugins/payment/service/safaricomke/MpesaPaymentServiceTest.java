@@ -250,7 +250,6 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	public void testCheckBalance() throws PaymentServiceException, SMSLibDeviceException, IOException  {
 		// given
 		StkRequest myAccountMenuItemRequest = mpesaMenu.getRequest("My account");
-		mpesaPaymentService.setCService(this.cService);
 		StkMenuItem showBalanceMenuItem = mockMenuItem("Show balance");
 
 		StkMenu myAccountMenu =	new StkMenu("My account", showBalanceMenuItem, "Call support",
@@ -263,10 +262,11 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(cService.stkRequest(showBalanceMenuItemRequest)).thenReturn(pinRequired);
 		
 		// when
+		mpesaPaymentService.setCService(this.cService);
 		mpesaPaymentService.checkBalance();
 		
 		waitForRequestJob();
-		
+		//Mock for StkRequest, hashCode: 18402106,Mock for StkRequest, hashCode: 18402106
 		// then
 		InOrder inOrder = inOrder(cService);
 		inOrder.verify(cService).stkRequest(StkRequest.GET_ROOT_MENU);
@@ -294,6 +294,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(cService.stkRequest(pinRequiredRequest, TEST_PIN)).thenReturn(pinRequiredResponse);
 		
 		// when
+		mpesaPaymentService.setCService(this.cService);
 		mpesaPaymentService.makePayment(getOutgoingPayment(CLIENT_1));
 		
 		waitForRequestJob();
