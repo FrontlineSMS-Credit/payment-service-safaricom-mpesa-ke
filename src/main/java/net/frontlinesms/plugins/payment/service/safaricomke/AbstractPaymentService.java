@@ -34,6 +34,7 @@ import org.creditsms.plugins.paymentview.data.repository.ClientDao;
 import org.creditsms.plugins.paymentview.data.repository.IncomingPaymentDao;
 import org.creditsms.plugins.paymentview.data.repository.LogMessageDao;
 import org.creditsms.plugins.paymentview.data.repository.OutgoingPaymentDao;
+import org.creditsms.plugins.paymentview.data.repository.PaymentServiceSettingsDao;
 import org.creditsms.plugins.paymentview.data.repository.TargetDao;
 import org.smslib.CService;
 import org.smslib.SMSLibDeviceException;
@@ -67,6 +68,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected IncomingPaymentDao incomingPaymentDao;
 	protected OutgoingPaymentDao outgoingPaymentDao;
 	protected LogMessageDao logDao;
+	protected PaymentServiceSettingsDao settingsDao;
 	protected ContactDao contactDao;
 	private PersistableSettings settings;
 	private PaymentViewPluginController pluginController;
@@ -83,6 +85,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.targetAnalytics = pluginController.getTargetAnalytics();
 		this.logDao = pluginController.getLogMessageDao();
 		this.contactDao = pluginController.getUiGeneratorController().getFrontlineController().getContactDao();
+		this.settingsDao = pluginController.getPaymentServiceSettingsDao();
 		
 		this.eventBus = pluginController.getEventBus();
 		eventBus.registerObserver(this);
@@ -190,6 +193,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		setBalanceConfirmationCode(confirmationCode);
 		setBalanceDateTime(timestamp);
 		setBalanceUpdateMethod(method);
+		settingsDao.updateServiceSettings(settings);
 	}
 
 //> CONFIGURABLE SERVICE METHODS
