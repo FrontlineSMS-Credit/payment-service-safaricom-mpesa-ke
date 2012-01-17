@@ -85,7 +85,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	
 	public void makePayment(final OutgoingPayment outgoingPayment)
 			throws PaymentServiceException {
-		final CService cService = super.cService;
+		final CService cService = smsModem.getCService();
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
 		queueOutgoingJob(new PaymentJob() {
 			public void run() {

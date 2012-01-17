@@ -135,7 +135,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				sendMoneyMenuItem , "Withdraw cash", "Buy airtime",
 				"Pay Bill", "Buy Goods", "ATM Withdrawal", myAccountMenuItem);
 		when(cService.stkRequest(mpesaMenuItemRequest)).thenReturn(mpesaMenu);
-		mpesaPaymentService.setCService(cService);
+		SmsModem smsModem = mock(SmsModem.class);
+		when(smsModem.getCService()).thenReturn(cService);
+		mpesaPaymentService.setSmsModem(smsModem);
 	}
 	
 	private PersistableSettings mockSettings(Object... settingsAndValues) {

@@ -58,7 +58,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 //> INSTANCE PROPERTIES
 	protected Logger log = FrontlineUtils.getLogger(this.getClass());
 	protected TargetAnalytics targetAnalytics;
-	protected CService cService;
+	protected SmsModem smsModem;
 	protected EventBus eventBus;
 	protected PaymentJobProcessor outgoingJobProcessor;
 	protected PaymentJobProcessor incomingJobProcessor;
@@ -75,7 +75,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	
 //> CONSTRUCTORS AND INITIALISERS
 	public void init(PaymentViewPluginController pluginController) throws PaymentServiceException {
-		setCService(getCService(pluginController));
+		setSmsModem(pluginController);
 		this.pluginController = pluginController;
 		this.accountDao = pluginController.getAccountDao();
 		this.clientDao = pluginController.getClientDao();
@@ -101,36 +101,34 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.log = log;
 	}
 
-	private CService getCService(PaymentViewPluginController pluginController) throws PaymentServiceException {
-		// TODO is there a neater way to do this?
-		String serial = getModemSerial();
-		for(SmsModem m : pluginController.getUiGeneratorController().getFrontlineController().getSmsServiceManager().getSmsModems()) {
-			if(m.getSerial().equals(serial) && m.isConnected()) {
-				return m.getCService();
-			}
-		}
-		throw new PaymentServiceException("No CService found for serial: " + serial);
-	}
-
 	protected void initIfRequired() throws SMSLibDeviceException, IOException {
 		// For now, we assume that init is always required.  If there is a clean way
 		// of identifying when it is and is not, we should perhaps implement this.
-		cService.getAtHandler().stkInit();
+		smsModem.getCService().getAtHandler().stkInit();
 	}
 	
 //> INSTANCE (TRANSIENT) ACCESSORS
-	public CService getCService() {
-		return cService;
-	}
-	public void setCService(final CService cService) {
-		this.cService = cService;
-	}
 	/** @return the settings attached to this instance. */
 	public PersistableSettings getSettings() {
 		return settings;
 	}
 	public void setSettings(PersistableSettings settings) {
 		this.settings = settings;
+	}
+
+	private void setSmsModem(PaymentViewPluginController pluginController) throws PaymentServiceException {
+		String serial = getModemSerial();
+		for(SmsModem m : pluginController.getUiGeneratorController().getFrontlineController().getSmsServiceManager().getSmsModems()) {
+			if(m.getSerial().equals(serial) && m.isConnected()) {
+				smsModem = m;
+				return;
+			}
+		}
+		throw new PaymentServiceException("No CService found for serial: " + serial);
+	}
+	
+	public void setSmsModem(SmsModem smsModem) {
+		this.smsModem = smsModem;
 	}
 	
 //> PERSISTENT PROPERTY ACCESSORS
@@ -184,8 +182,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.settings.set(PROPERTY_BALANCE_ENABLED, checkBalanceEnabled);
 	}
 	
-	public String getSimImsi() {
-		return getProperty(PROPERTY_SIM_IMSI, String.class);
+	private String getSimImsi() {
+		return getProperty(PROPERTY_SIM_IMSI, "");
 	}
 	
 	public void setSimImsi(String simImsi) {
@@ -206,8 +204,16 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	}
 	
 	public void startService() throws PaymentServiceException {
-		final CService cService = this.cService;
-		if(cService == null) throw new PaymentServiceException("Cannot start payment service with null CService.");
+		if(smsModem == null) throw new PaymentServiceException("Cannot start payment service with null CService.");
+		
+		// if this is the first start, set and save the SIM IMSI
+		if(getSimImsi() == null) {
+			setSimImsi(smsModem.getImsiNumber());
+			settingsDao.updateServiceSettings(settings);
+		}
+		
+		final CService cService = smsModem.getCService();
+		
 		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {

@@ -48,8 +48,41 @@ public class ServiceMonitorTest extends BaseTestCase {
 		// given
 		SmsModem modem = mock(SmsModem.class);
 		when(modem.getSerial()).thenReturn("ASDF");
+		when(modem.getImsiNumber()).thenReturn("1234567890");
 		final PersistableSettings settingsX = mock(PersistableSettings.class);
-		when(settingsDao.getByProperty(AbstractPaymentService.PROPERTY_MODEM_SERIAL, "ASDF")).thenReturn(settingsX);
+		when(settingsDao.getByProperties(
+				AbstractPaymentService.PROPERTY_MODEM_SERIAL, "ASDF",
+				AbstractPaymentService.PROPERTY_SIM_IMSI, "1234567890")).thenReturn(settingsX);
+		
+		// when
+		m.notify(new SmsModemStatusNotification(modem, SmsModemStatus.CONNECTED));
+		
+		// then
+		verify(eventBus).notifyObservers(new FrontlineEventNotification() {
+			@Override
+			public boolean equals(Object that) {
+				if(!(that instanceof PaymentServiceStartRequest))
+					return false;
+				PaymentServiceStartRequest r = (PaymentServiceStartRequest) that;
+				return r.getSettings() == settingsX;
+			}
+		});
+	}
+	
+	/**
+	 * GIVEN there is a payment service X configured for modem Y
+	 * WHEN modem Y is connected
+	 * THEN service X is started
+	 */
+	public void testServiceStartsWhenModemIsConnectedForUnknownImsi() {
+		// given
+		SmsModem modem = mock(SmsModem.class);
+		when(modem.getSerial()).thenReturn("ASDF");
+		when(modem.getImsiNumber()).thenReturn("1234567890");
+		final PersistableSettings settingsX = mock(PersistableSettings.class);
+		when(settingsDao.getByProperties(
+				AbstractPaymentService.PROPERTY_MODEM_SERIAL, "ASDF",
+				AbstractPaymentService.PROPERTY_SIM_IMSI, null)).thenReturn(settingsX);
 		
 		// when
 		m.notify(new SmsModemStatusNotification(modem, SmsModemStatus.CONNECTED));
