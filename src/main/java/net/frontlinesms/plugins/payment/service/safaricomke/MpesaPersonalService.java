@@ -339,10 +339,11 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					String payBillName = getPayBillName(message);
 					String accountNo = getPayBillAccount(message);
 					BigDecimal amount = getAmount(message);
+					String specialValue = "PayBill:" + accountNo;
 					
-					outgoingPayments = outgoingPaymentDao.getOutgoingPaymentByAmountPayBillNameAndAccountNo(
-							payBillName, accountNo,
-							amount, OutgoingPayment.Status.UNCONFIRMED);
+					outgoingPayments = outgoingPaymentDao.getOutgoingPaymentByFirstNameAndAmountAndSpecialAndStatus(
+							payBillName, amount, specialValue,
+							OutgoingPayment.Status.UNCONFIRMED);
 					
 					if (!outgoingPayments.isEmpty()) {
 						final OutgoingPayment outgoingPayment = outgoingPayments.get(0);

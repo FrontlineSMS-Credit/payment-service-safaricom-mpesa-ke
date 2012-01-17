@@ -91,11 +91,11 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		outgoingPayment.setAmountPaid(amount);
 		outgoingPayment.setTimePaid(Calendar.getInstance().getTime());
 		outgoingPayment.setNotes(accountNo);
-		outgoingPayment.setStatus(OutgoingPayment.Status.UNCONFIRMED);
+		outgoingPayment.setSpecial("PayBill:" + accountNo);
+		outgoingPayment.setStatus(OutgoingPayment.Status.CREATED);
 		outgoingPayment.setPaymentId("");
 		outgoingPayment.setConfirmationCode("");
 		outgoingPayment.setPaymentServiceSettings(getSettings());
-		outgoingPayment.setPayBillPayment(true);
 
 		outgoingPaymentDao.saveOutgoingPayment(outgoingPayment);
 		
@@ -114,6 +114,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 								IOException {
 
 							initIfRequired();
+							updateStatus(PaymentStatus.SENDING);
 							final StkMenu mPesaMenu = getMpesaMenu();
 							final StkResponse payBillResponse = cService
 								.stkRequest(mPesaMenu.getRequest("Pay Bill"));
