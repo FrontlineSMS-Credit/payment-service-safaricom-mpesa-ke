@@ -30,7 +30,13 @@ public class ServiceMonitor implements PaymentServiceMonitor {
 	private void processModemStatusNotification(SmsModemStatusNotification notification) {
 		if(notification.getStatus() == SmsModemStatus.CONNECTED) {
 			String serial = notification.getService().getSerial();
-			PersistableSettings settings = settingsDao.getByProperty(AbstractPaymentService.PROPERTY_MODEM_SERIAL, serial);
+			String imsi = notification.getService().getImsiNumber();
+			PersistableSettings settings = settingsDao.getByProperties(
+					AbstractPaymentService.PROPERTY_MODEM_SERIAL, serial,
+					AbstractPaymentService.PROPERTY_SIM_IMSI, imsi);
+			if(settings == null) settings = settingsDao.getByProperties(
+					AbstractPaymentService.PROPERTY_MODEM_SERIAL, serial,
+					AbstractPaymentService.PROPERTY_SIM_IMSI, null);
 			if(settings != null) {
 				eventBus.notifyObservers(new PaymentServiceStartRequest(settings));
 			}

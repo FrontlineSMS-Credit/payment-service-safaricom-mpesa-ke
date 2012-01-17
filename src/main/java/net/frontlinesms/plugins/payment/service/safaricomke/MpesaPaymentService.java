@@ -103,8 +103,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	public void makePaymentToPaybillAccount(final OutgoingPayment outgoingPayment) {
-		
-		final CService cService = this.cService;
+		final CService cService = smsModem.getCService();
 		final BigDecimal amount = outgoingPayment.getAmountPaid();
 		queueOutgoingJob(new PaymentJob() {
 			public void run() {
@@ -192,7 +191,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 
 	public void checkBalance() throws PaymentServiceException {
 		final String pin = getPin();
-		final CService cService = this.cService;
+		final CService cService = smsModem.getCService();
 		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
@@ -506,12 +505,12 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 
 	StkMenu getMpesaMenu() throws StkMenuItemNotFoundException, SMSLibDeviceException, IOException {
-		final StkResponse stkResponse = cService.stkRequest(StkRequest.GET_ROOT_MENU);
+		final StkResponse stkResponse = smsModem.getCService().stkRequest(StkRequest.GET_ROOT_MENU);
 		StkMenu rootMenu = null;
 		
 		if (stkResponse instanceof StkMenu) {
 			rootMenu = (StkMenu) stkResponse;
-			return (StkMenu) cService.stkRequest(rootMenu.getRequest("M-PESA"));
+			return (StkMenu) smsModem.getCService().stkRequest(rootMenu.getRequest("M-PESA"));
 		} else {
 			throw new SMSLibDeviceException("StkResponse Error Returned.");
 		}
