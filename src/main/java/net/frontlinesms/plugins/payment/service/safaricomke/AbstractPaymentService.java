@@ -182,7 +182,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		this.settings.set(PROPERTY_BALANCE_ENABLED, checkBalanceEnabled);
 	}
 	
-	private String getSimImsi() {
+	public String getSimImsi() {
 		return getProperty(PROPERTY_SIM_IMSI, "");
 	}
 	
@@ -207,7 +207,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		if(smsModem == null) throw new PaymentServiceException("Cannot start payment service with null CService.");
 		
 		// if this is the first start, set and save the SIM IMSI
-		if(getSimImsi() == null) {
+		if(getSimImsi().length()==0) {
 			setSimImsi(smsModem.getImsiNumber());
 			settingsDao.updateServiceSettings(settings);
 		}

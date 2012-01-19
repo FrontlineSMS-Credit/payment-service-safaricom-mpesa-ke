@@ -180,8 +180,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	protected void processMessage(final FrontlineMessage message) {
 		if (message.getEndpointId() != null) {
-			//if(getModemSerial().equals(message.getEndpointId())) {
-			if(true) {
+			if((getSimImsi()+"@"+getModemSerial()).equals(message.getEndpointId())) {
 				if (isValidOutgoingPaymentPayBillConfirmation(message)) {
 					processOutgoingPayBillPayment(message);
 				} else if (isFailedMpesaPayment(message)) {
@@ -308,11 +307,11 @@ public class MpesaPersonalService extends MpesaPaymentService {
 							outgoingPayment.setConfirmationCode(getConfirmationCode(message));
 							outgoingPayment.setTimeConfirmed(getTimePaid(message, true).getTime());
 							outgoingPayment.setStatus(OutgoingPayment.Status.CONFIRMED);
-							performOutgoingPaymentFraudCheck(message, outgoingPayment);
-
+							
 							outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 
 							logDao.info("Outgoing Confirmation Payment", message.getTextContent());
+							performOutgoingPaymentFraudCheck(message, outgoingPayment);
 						} else {
 							logDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message", message.getTextContent());
 						}	
@@ -350,11 +349,10 @@ public class MpesaPersonalService extends MpesaPaymentService {
 						outgoingPayment.setConfirmationCode(getConfirmationCode(message));
 						outgoingPayment.setTimeConfirmed(getTimePaid(message, true).getTime());
 						outgoingPayment.setStatus(OutgoingPayment.Status.CONFIRMED);
-						performOutgoingPaymentFraudCheck(message, outgoingPayment);
-
 						outgoingPaymentDao.updateOutgoingPayment(outgoingPayment);
 
 						logDao.info("Outgoing Confirmation Payment", message.getTextContent());
+						performOutgoingPaymentFraudCheck(message, outgoingPayment);
 					} else {
 						logDao.warn("Outgoing Confirmation Payment: No unconfirmed outgoing payment for the following confirmation message", message.getTextContent());
 					}
