@@ -321,10 +321,10 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	public void testPaymentReversalProcessing(){
 		paymentReversalProcessing(
 				"DXAH67GH9 Confirmed.\n"
-				+"Transaction BC77RI604\n"
-				+"has been reversed. Your\n"
-				+"account balance now\n"
-				+"0Ksh",
+						+"Transaction BC77RI604\n"
+						+"has been reversed. Your\n"
+						+"account balance now\n"
+						+"0Ksh",
 				"DXAH67GH9","BC77RI604");
 	}
 	
@@ -419,8 +419,6 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		// setup
 		assertTrue(mpesaPaymentService instanceof EventObserver);
 		OutgoingPayment payment = new OutgoingPayment();
-//		Set<Account> myAccounts = mockAccounts(accountNumber);
-//		Client myClient = mockClient(1, phoneNo, myAccounts);
 		payment.setClient(CLIENT_1);
 		payment.setAmountPaid(new BigDecimal(amount));
 		
@@ -551,7 +549,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		FrontlineMessage m = mock(FrontlineMessage.class);
 		when(m.getSenderMsisdn()).thenReturn(from);
 		when(m.getTextContent()).thenReturn(text);
-		when(m.getEndpointId()).thenReturn("093SH5S655");
+		when(m.getEndpointId()).thenReturn("@093SH5S655");
 		return m;
 	}
 	
