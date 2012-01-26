@@ -28,4 +28,5 @@ public class MpesaPersonalActionUiHandler implements PaymentServiceUiActionHandl
 	public void launchPaybillWizard() {
 		new PayBillSendDialogHandler(ui, service).showDialog();
 	}
+	
 }

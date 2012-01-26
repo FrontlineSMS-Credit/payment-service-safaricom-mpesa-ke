@@ -303,16 +303,19 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							Contact contact = new Contact(client.getFullName(), client.getPhoneNumber(), "", "", "", true);
 							contactDao.saveContact(contact);
 							//Finish save
-							
 							account = new Account(accountDao.createAccountNumber(), client, false, true);
 							accountDao.saveAccount(account);
+							reportPaymentFromNewClient(createIncomingPayment(account,null, message));
+					    }
+						if (this.toString().equals("M-PESA Kenya: Paybill Service")) {
+							payment.setNotes(getPayBillAccount(message));
 						}
 						payment = createIncomingPayment(account,null, message);
-						payment.setNotes(getPayBillAccount(message));
-						
-						performIncominPaymentFraudCheck(message, payment);
 						incomingPaymentDao.saveIncomingPayment(payment);
 						updateStatus(PaymentStatus.PROCESSED);
+						
+						performIncominPaymentFraudCheck(message, payment);
+
 					}
 					
 					//log the saved incoming payment
@@ -483,8 +486,12 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	
 	String getPayBillAccount(FrontlineMessage message) {
 		String accNumber = getFirstMatch(message, "account [A-Z0-9]+");
-		return accNumber
-				.substring("account ".length());
+		if(accNumber.equals("")){
+			return "";
+		} else {
+			return accNumber
+			.substring("account ".length());
+		}
 	}
 	
 	String getPayBillName(final FrontlineMessage message) {

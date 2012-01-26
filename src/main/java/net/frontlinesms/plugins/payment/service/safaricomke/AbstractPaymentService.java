@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import org.creditsms.plugins.paymentview.PaymentViewPluginController;
 import org.creditsms.plugins.paymentview.analytics.TargetAnalytics;
 import org.creditsms.plugins.paymentview.data.domain.Account;
+import org.creditsms.plugins.paymentview.data.domain.IncomingPayment;
 import org.creditsms.plugins.paymentview.data.repository.AccountDao;
 import org.creditsms.plugins.paymentview.data.repository.ClientDao;
 import org.creditsms.plugins.paymentview.data.repository.IncomingPaymentDao;
@@ -310,5 +311,9 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	
 	void updateStatus(PaymentStatus status) {
 		pluginController.updateStatusBar(status.toString());
+	}
+	
+	void reportPaymentFromNewClient(IncomingPayment payment){
+		pluginController.reportPaymentByNewClient(payment.getPaymentBy(), payment.getAmountPaid());
 	}
 }
