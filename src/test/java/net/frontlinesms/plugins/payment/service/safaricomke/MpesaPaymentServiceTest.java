@@ -113,6 +113,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		this.cService = SmsLibTestUtils.mockCService();
 		this.aTHandler = mock(CATHandler_Wavecom_Stk.class);
 		when(cService.getAtHandler()).thenReturn(aTHandler);
+		when(cService.getAtHandler().supportsStk()).thenReturn(true);
 		
 		mpesaPaymentService.setSettings(mockSettings(
 				AbstractPaymentService.PROPERTY_PIN, new PasswordString(TEST_PIN),
@@ -184,6 +185,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 
 	@SuppressWarnings("unchecked")
 	private void setUpDaos() throws Exception {
+	
 		incomingPaymentDao = mock(IncomingPaymentDao.class);
 		outgoingPaymentDao= mock(OutgoingPaymentDao.class);
 	    logMessageDao = mock(LogMessageDao.class);
@@ -213,6 +215,12 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		when(ui.getFrontlineController().getSmsServiceManager().getSmsModems()).thenReturn(smsModems);
 		when(smsModem.getSerial()).thenReturn("093SH5S655");
 		when(smsModem.isConnected()).thenReturn(true);
+		
+		cService = SmsLibTestUtils.mockCService();
+		aTHandler = mock(CATHandler_Wavecom_Stk.class);
+		when(smsModem.getCService()).thenReturn(cService);
+		when(smsModem.getCService().getAtHandler()).thenReturn(aTHandler);
+		when(smsModem.getCService().getAtHandler().supportsStk()).thenReturn(true);
 		
 		//Set Up Rules
 		when(pluginController.getAccountDao()).thenReturn(accountDao);
