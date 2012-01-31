@@ -115,6 +115,17 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	public void setSettings(PersistableSettings settings) {
 		this.settings = settings;
 	}
+	public boolean isRestartRequired(PersistableSettings newSettings) {
+		// return true if any user-modified settings have changed
+		return hasChanged(newSettings, PROPERTY_MODEM_SERIAL) ||
+				hasChanged(newSettings, PROPERTY_PIN) ||
+				hasChanged(newSettings, PROPERTY_OUTGOING_ENABLED) ||
+				hasChanged(newSettings, PROPERTY_BALANCE_ENABLED);
+	}
+	
+	private boolean hasChanged(PersistableSettings newSettings, String propertyKey) {
+		return !newSettings.get(propertyKey).equals(settings.get(propertyKey));
+	}
 
 	private void setSmsModem(PaymentViewPluginController pluginController) throws PaymentServiceException {
 		String serial = getModemSerial();
