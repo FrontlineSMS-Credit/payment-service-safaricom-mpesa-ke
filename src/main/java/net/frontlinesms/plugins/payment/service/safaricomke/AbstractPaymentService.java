@@ -96,6 +96,8 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		
 		this.outgoingJobProcessor = new PaymentJobProcessor(this);
 		this.outgoingJobProcessor.start();
+
+		setCheckBalanceEnabled(smsModem.getCService().getAtHandler().supportsStk());
 	}
 	
 	public void setLog(Logger log) {
