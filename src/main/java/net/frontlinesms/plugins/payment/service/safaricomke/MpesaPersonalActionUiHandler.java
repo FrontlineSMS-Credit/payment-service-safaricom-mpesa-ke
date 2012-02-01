@@ -18,13 +18,21 @@ public class MpesaPersonalActionUiHandler implements PaymentServiceUiActionHandl
 	}
 
 	public Object[] getMenuItems() {
-		Object payBillMenuItem = ui.createMenuitem("", "make PayBill payment"); // TODO add icon FIXME i18n
+
+		Object payBillMenuItem = createMenuitem("make PayBill payment", service.smsModem.getCService().getAtHandler().supportsStk());
 		ui.setAction(payBillMenuItem, "launchPaybillWizard", payBillMenuItem, this);
 		return new Object[] {
 				payBillMenuItem 
 		};
 	}
 	
+	private Object createMenuitem(String text,
+			boolean supportsStk) {
+		Object m = ui.createMenuitem("", text);
+		ui.setEnabled(m, supportsStk);
+		return m;
+	}
+
 	public void launchPaybillWizard() {
 		new PayBillSendDialogHandler(ui, service).showDialog();
 	}
