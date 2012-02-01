@@ -247,9 +247,13 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		// TODO this method is ridiculously long
 		queueIncomingJob(new PaymentJob() {
 			public void run() {
+				String plainTextMsgContent = "";
 				try {
 					IncomingPayment payment = new IncomingPayment();
 					// retrieve applicable account if the client exists
+					plainTextMsgContent = message.getTextContent();
+					
+					plainTextMsgContent = plainTextMsgContent.replace("\n", "");
 					Account account = getAccount(message);
 					updateStatus(PaymentStatus.RECEIVING);
 					if (account != null){
@@ -283,7 +287,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 						if (clientDao.getClientByPhoneNumber(getPhoneNumber(message))!=null) {
 							//save the incoming payment in generic account
 							account = accountDao.getGenericAccountsByClientId(clientDao.getClientByPhoneNumber(getPhoneNumber(message)).getId());
-							log.warn("The account does not exist for this client. Incoming payment has been saved in generic account. "+ message.getTextContent());
+							log.warn("The account does not exist for this client. Incoming payment has been saved in generic account. "+ plainTextMsgContent);
 						} else {
 							// client does not exist in the database -> create client and generic account
 							final String paymentBy = getPaymentBy(message);
@@ -322,12 +326,12 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.INFO,
 										   	"Incoming Payment",
-										   	message.getTextContent()));
+										   	plainTextMsgContent));
 				} catch (final IllegalArgumentException ex) {
 					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.ERROR,
 										   	"Incoming Payment: Message failed to parse; likely incorrect format",
-										   	 message.getTextContent()));
+										   	plainTextMsgContent));
 					log.warn("Message failed to parse; likely incorrect format", ex);
 					updateStatus(PaymentStatus.ERROR);
 					throw new RuntimeException(ex);
@@ -336,7 +340,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					logDao.saveLogMessage(
 							new LogMessage(LogMessage.LogLevel.ERROR,
 								   	"Incoming Payment: Unexpected exception parsing incoming payment SMS",
-								   	message.getTextContent()));
+								   	plainTextMsgContent));
 					updateStatus(PaymentStatus.ERROR);
 					throw new RuntimeException(ex);
 				}
