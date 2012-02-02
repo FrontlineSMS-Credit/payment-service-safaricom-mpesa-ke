@@ -430,13 +430,25 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					.getActiveNonGenericAccountsByClientId(client.getId());
 			if (!activeNonGenericAccountsByClientId.isEmpty()) {
 				return activeNonGenericAccountsByClientId.get(0);
-			} else {
-				return accountDao.getGenericAccountsByClientId(client.getId());
+			} else {			
+				Account genericAccount = accountDao.getGenericAccountsByClientId(client.getId()); 
+				if(genericAccount != null) {
+					return genericAccount;
+				} else {
+					Account account = new Account(accountDao.createAccountNumber(), client, false, true);
+					try {
+						accountDao.saveAccount(account);
+					} catch (DuplicateKeyException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					return accountDao.getGenericAccountsByClientId(client.getId());
+				}
 			}
 		}
 		return null;
 	}
-
+	
 	@Override
 	String getPaymentBy(FrontlineMessage message) {
 		try {
