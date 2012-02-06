@@ -28,7 +28,7 @@ public class MpesaPersonalActionUiHandler implements PaymentServiceUiActionHandl
 	
 	private Object createMenuitem(String text,
 			boolean supportsStk) {
-		Object m = ui.createMenuitem("", text);
+		Object m = ui.createMenuitem("", text);  // TODO add icon FIXME i18n
 		ui.setEnabled(m, supportsStk);
 		return m;
 	}
