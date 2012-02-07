@@ -3,7 +3,7 @@
 	<groupId>net.frontlinesms.plugins.payment</groupId>
 	<artifactId>safaricom-kenya</artifactId>
 	<name>FrontlineSMS Safaricom Kenya PaymentService</name>
-	<version>0.1.0</version>
+	<version>0.1.1-SNAPSHOT</version>
 	<description>PaymentService implementation for FrontlineSMS:Credit for Safaricom Kenya.</description>
 	<parent>
 		<groupId>net.frontlinesms.core</groupId>
