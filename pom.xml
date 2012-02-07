@@ -12,9 +12,16 @@
 		<version>1.7.0-beta-7</version>
 		<relativePath>../pom-parent</relativePath>
 	</parent>
+
 	<scm>
 		<developerConnection>scm:git:git@github.com:${github.projectOwner}/${github.projectName}.git</developerConnection>
 	</scm>
+
+        <properties>
+                <github.projectOwner>FrontlineSMS-Credit</github.projectOwner>
+                <github.projectName>payment-service-safaricom-mpesa-ke</github.projectName>
+        </properties>
+
 	<distributionManagement>
 		<repository>
 			<id>frontlinesms.repo</id>
@@ -29,11 +36,10 @@
 			<artifactId>frontlinesms-plugin-payment</artifactId>
 			<version>0.2.0</version>
 		</dependency>
-	    <dependency>
+		<dependency>
 			<groupId>net.frontlinesms.test</groupId>
 			<artifactId>frontlinesms-test</artifactId>
-			<version>0.1.2</version>
-			<scope>test</scope>
-	    </dependency>
+		</dependency>
 	</dependencies>
 </project>
+
