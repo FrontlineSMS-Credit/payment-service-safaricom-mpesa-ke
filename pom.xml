@@ -30,7 +30,7 @@
 			<version>0.2.0</version>
 		</dependency>
 	    <dependency>
-			<groupId>net.frontlinesms.core</groupId>
+			<groupId>net.frontlinesms.test</groupId>
 			<artifactId>frontlinesms-test</artifactId>
 			<version>0.1.2</version>
 			<scope>test</scope>
