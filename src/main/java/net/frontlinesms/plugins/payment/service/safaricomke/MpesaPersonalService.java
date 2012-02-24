@@ -67,17 +67,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	private static final String BALANCE_REGEX = "[A-Z0-9]+ Confirmed.\n"
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\n"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M))";
-	
-	
-	//BU06JE425 Confirmed. Ksh500.00 sent to 254702216107 on 8/11/11 at 2:45PM. New M-PESA balance is Ksh1719.00.
-	
-	//BX94QN980 Confirmed. Ksh75.00 sent to ROY ONYANGO +254720330266 on 4/1/12 at 6:51 PM New M-PESA balance is Ksh34,255.00
-	
-	//BY03VU279 Confirmed. Ksh50.00 sent to Safaricom Post Paid for account 0720330266 on 6/1/12 at 10:17 AM
-	//New M-PESA balance is Ksh195.00.
-	
-	//Failed. M-PESA cannot  pay Ksh50.00 to KENYANS FOR KENYA. For more information call or SMS customer services on 234.
-	
+
 //> INSTANCE METHODS
 	public boolean isOutgoingPaymentEnabled() {
 		return super.isOutgoingPaymentEnabled();
@@ -180,8 +170,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	protected void processMessage(final FrontlineMessage message) {
 		if (message.getEndpointId() != null) {
-			//if((getSimImsi()+"@"+getModemSerial()).equals(message.getEndpointId())) {
-			if(true){
+			if((getSimImsi()+"@"+getModemSerial()).equals(message.getEndpointId())) {
 				if (isValidOutgoingPaymentPayBillConfirmation(message)) {
 					processOutgoingPayBillPayment(message);
 				} else if (isFailedMpesaPayment(message)) {

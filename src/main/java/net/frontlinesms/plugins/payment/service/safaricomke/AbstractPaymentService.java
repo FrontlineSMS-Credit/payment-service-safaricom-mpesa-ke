@@ -73,7 +73,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	protected ContactDao contactDao;
 	private PersistableSettings settings;
 	private PaymentViewPluginController pluginController;
-	
+
 //> CONSTRUCTORS AND INITIALISERS
 	public void init(PaymentViewPluginController pluginController) throws PaymentServiceException {
 		setSmsModem(pluginController);

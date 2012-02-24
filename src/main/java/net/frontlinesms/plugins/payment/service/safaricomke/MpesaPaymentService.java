@@ -424,6 +424,8 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 	}
 	
 	void informUserOfFraudIfCommitted(BigDecimal expectedBalance, BigDecimal actualBalance, String messageContent) {
+		actualBalance = actualBalance.setScale(2, BigDecimal.ROUND_HALF_DOWN);
+		expectedBalance = expectedBalance.setScale(2, BigDecimal.ROUND_HALF_DOWN);
 		if(expectedBalance.compareTo(new BigDecimal(0)) < 0) {
 			//Now we don't want Mathematical embarrassment... TODO explain what this comment means
 			log.error("Balance for: "+ this.toString() +" is much lower than expected: " + actualBalance + " instead of: "+ expectedBalance);
