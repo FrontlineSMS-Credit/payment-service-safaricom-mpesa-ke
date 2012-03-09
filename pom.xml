@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>net.frontlinesms.plugins</groupId>
 			<artifactId>frontlinesms-plugin-payment</artifactId>
-			<version>0.2.2-SNAPSHOT</version>
+			<version>0.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>net.frontlinesms.test</groupId>
