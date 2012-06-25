@@ -71,13 +71,16 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected static final String PHONENUMBER_0 = "+254723908000";
 	protected static final String PHONENUMBER_1 = "+254723908001";
 	protected static final String PHONENUMBER_2 = "+254723908002";
+	protected static final String PHONENUMBER_3 = "+254701035990";
 	protected static final String ACCOUNTNUMBER_1_1 = "0700000011";
 	protected static final String ACCOUNTNUMBER_2_1 = "0700000021";
 	protected static final String ACCOUNTNUMBER_2_2 = "0700000022";
+	protected static final String ACCOUNTNUMBER_2_3 = "12345";
 	
 	protected Client CLIENT_0;
 	protected Client CLIENT_1;
 	protected Client CLIENT_2;
+	protected Client CLIENT_3;
 	
 	private CService cService;
 	private CATHandler_Wavecom_Stk aTHandler;
@@ -246,11 +249,12 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		//Set up accounts, targets and clients
 		Set<Account> accounts1 = mockAccounts(ACCOUNTNUMBER_1_1);
 		Set<Account> accounts2 = mockAccounts(ACCOUNTNUMBER_2_1, ACCOUNTNUMBER_2_2);
+		Set<Account> accounts3 = mockAccounts(ACCOUNTNUMBER_2_3);
 		
 	    CLIENT_0 = mockClient(0, PHONENUMBER_0, Collections.EMPTY_SET);
 	    CLIENT_1 = mockClient(1, PHONENUMBER_1, accounts1);
 	    CLIENT_2 = mockClient(2, PHONENUMBER_2, accounts2);
-
+	    CLIENT_3 = mockClient(3, PHONENUMBER_3, accounts3);
 
 	}
 	
@@ -403,13 +407,13 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		notifyAndWait_incoming(mockMessageNotification("MPESA", messageText));
 		
 		// then
-		verify(incomingPaymentDao).saveIncomingPayment(new IncomingPayment() {
+		IncomingPayment ip = new IncomingPayment() {
 			@Override
 			public boolean equals(Object that) {
 				
 				if(!(that instanceof IncomingPayment)) return false;
 				IncomingPayment other = (IncomingPayment) that;
-
+				
 				return other.getPhoneNumber().equals(phoneNo) &&
 					other.getAmountPaid().equals(new BigDecimal(amount)) &&
 					other.getAccount().getAccountNumber().equals(accountNumber) &&
@@ -417,7 +421,15 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 					other.getTimePaid().equals(getTimestamp(datetime).getTime()) &&
 					other.getPaymentBy().equals(payedBy);
 			}
-		});
+		};
+		ip.setAccount(accountDao.getAccountByAccountNumber(accountNumber));
+		ip.setPhoneNumber(phoneNo);
+		ip.setAmountPaid(new BigDecimal(amount));
+		ip.setConfirmationCode(confirmationCode);
+		ip.setTimePaid(getTimestamp(datetime));
+		ip.setPaymentBy(payedBy);
+		
+		verify(incomingPaymentDao).saveIncomingPayment(ip);
 	}
 	
 	protected void testOutgoingPaymentProcessing(String messageText,
