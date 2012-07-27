@@ -26,6 +26,7 @@ import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.data.domain.PersistableSettings;
 import net.frontlinesms.data.events.EntitySavedNotification;
+import net.frontlinesms.data.repository.ContactDao;
 import net.frontlinesms.events.EventBus;
 import net.frontlinesms.events.EventObserver;
 import net.frontlinesms.events.FrontlineEventNotification;
@@ -55,6 +56,7 @@ import org.creditsms.plugins.paymentview.data.repository.OutgoingPaymentDao;
 import org.creditsms.plugins.paymentview.data.repository.PaymentServiceSettingsDao;
 import org.creditsms.plugins.paymentview.data.repository.TargetDao;
 import org.mockito.InOrder;
+import org.mockito.Mock;
 import org.smslib.CService;
 import org.smslib.SMSLibDeviceException;
 import org.smslib.handler.CATHandler_Wavecom_Stk;
@@ -77,9 +79,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected static final String ACCOUNTNUMBER_2_1 = "0700000021";
 	protected static final String ACCOUNTNUMBER_2_2 = "0700000022";
 	protected static final String ACCOUNTNUMBER_2_3 = "12345";
-	protected static final String ACCOUNTNUMBER_4_1 = "test";
+	protected static final String ACCOUNTNUMBER_4_1 = "testlower";
 	protected static final String ACCOUNTNUMBER_4_2 = "TEST";
-	protected static final String ACCOUNTNUMBER_4_3 = "TEst";
+	protected static final String ACCOUNTNUMBER_4_3 = "TEstMixed";
 	protected static final String ACCOUNTNUMBER_4_4 = "TEST76576";
 	
 	protected Client CLIENT_0;
@@ -87,40 +89,42 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected Client CLIENT_2;
 	protected Client CLIENT_3;
 	protected Client CLIENT_4;
+
+
+	/** instance under test */
+	protected E mpesaPaymentService;
+
 	
 	private CService cService;
-	private CATHandler_Wavecom_Stk aTHandler;
-	
+	@Mock private CATHandler_Wavecom_Stk aTHandler;
+
+	private StkMenu mpesaMenu;
 	private StkMenuItem myAccountMenuItem;
 	private StkRequest mpesaMenuItemRequest;
 	private StkMenuItem sendMoneyMenuItem;
-	
-	private StkMenu mpesaMenu;
-	private ClientDao clientDao;
-	protected AccountDao accountDao;
-	private TargetDao targetDao;
-	private IncomingPaymentDao incomingPaymentDao;
-	protected OutgoingPaymentDao outgoingPaymentDao;
-	protected LogMessageDao logMessageDao;
-	private UiGeneratorController ui;
-	private TargetAnalytics targetAnalytics;
-	protected E mpesaPaymentService;
-	protected Logger logger;
-	private PaymentViewPluginController pluginController;
-	private EventBus eventBus;
-	private PaymentServiceSettingsDao settingsDao;
+
+	@Mock private ClientDao clientDao;
+	@Mock private ContactDao contactDao;
+	@Mock protected AccountDao accountDao;
+	@Mock private TargetDao targetDao;
+	@Mock private IncomingPaymentDao incomingPaymentDao;
+	@Mock protected OutgoingPaymentDao outgoingPaymentDao;
+	@Mock protected LogMessageDao logMessageDao;
+	@Mock private UiGeneratorController ui;
+	@Mock private TargetAnalytics targetAnalytics;
+	@Mock protected Logger logger;
+	@Mock private PaymentViewPluginController pluginController;
+	@Mock private EventBus eventBus;
+	@Mock private PaymentServiceSettingsDao settingsDao;
 	
 	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 		
-		this.logger = mock(Logger.class);
-
 		this.mpesaPaymentService = (E) createNewTestClass();
 		this.mpesaPaymentService.setLog(logger);
 		
 		this.cService = SmsLibTestUtils.mockCService();
-		this.aTHandler = mock(CATHandler_Wavecom_Stk.class);
 		when(cService.getAtHandler()).thenReturn(aTHandler);
 		when(cService.getAtHandler().supportsStk()).thenReturn(true);
 		
@@ -194,21 +198,7 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 
 	@SuppressWarnings("unchecked")
 	private void setUpDaos() throws Exception {
-	
-		incomingPaymentDao = mock(IncomingPaymentDao.class);
-		outgoingPaymentDao= mock(OutgoingPaymentDao.class);
-	    logMessageDao = mock(LogMessageDao.class);
-		
-		targetDao = mock(TargetDao.class);
-		clientDao = mock(ClientDao.class);
-		accountDao = mock(AccountDao.class);
-		targetAnalytics = mock(TargetAnalytics.class);
-		settingsDao = mock(PaymentServiceSettingsDao.class);
-		
 		when(targetAnalytics.getStatus(anyLong())).thenReturn(TargetAnalytics.Status.PAYING);
-		
-		pluginController = mock(PaymentViewPluginController.class);
-		ui = mock(UiGeneratorController.class);
 		
 		FrontlineSMS fsms = mock(FrontlineSMS.class);
 		SmsServiceManager smsSrvsManager = mock(SmsServiceManager.class);
@@ -217,16 +207,15 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		List<SmsModem> smsModems = new ArrayList<SmsModem>();
 		smsModems.add(smsModem);
 		
-		eventBus = mock(EventBus.class);
 		when(fsms.getEventBus()).thenReturn(eventBus);
 		when(ui.getFrontlineController()).thenReturn(fsms);
+		when(ui.getFrontlineController().getContactDao()).thenReturn(contactDao);
 		when(ui.getFrontlineController().getSmsServiceManager()).thenReturn(smsSrvsManager);
 		when(ui.getFrontlineController().getSmsServiceManager().getSmsModems()).thenReturn(smsModems);
 		when(smsModem.getSerial()).thenReturn("093SH5S655");
 		when(smsModem.isConnected()).thenReturn(true);
 		
 		cService = SmsLibTestUtils.mockCService();
-		aTHandler = mock(CATHandler_Wavecom_Stk.class);
 		when(smsModem.getCService()).thenReturn(cService);
 		when(smsModem.getCService().getAtHandler()).thenReturn(aTHandler);
 		when(smsModem.getCService().getAtHandler().supportsStk()).thenReturn(true);
@@ -422,12 +411,24 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				if(!(that instanceof IncomingPayment)) return false;
 				IncomingPayment other = (IncomingPayment) that;
 				
-				return other.getPhoneNumber().equals(phoneNo) &&
+				boolean matches = other.getPhoneNumber().equals(phoneNo) &&
 					other.getAmountPaid().equals(new BigDecimal(amount)) &&
-					other.getAccount().getAccountNumber().equals(accountNumber) &&
+					accountNumber.equals(other.getAccount().getAccountNumber()) &&
 					other.getConfirmationCode().equals(confirmationCode) &&
 					other.getTimePaid().equals(getTimestamp(datetime).getTime()) &&
 					other.getPaymentBy().equals(payedBy);
+				
+				if(!matches) {
+					System.out.println("EXPECTED | ACTUAL");
+					System.out.println(phoneNo + " | " + other.getPhoneNumber());
+					System.out.println(amount + " | " + other.getAmountPaid());
+					System.out.println(accountNumber + " | " + other.getAccount().getAccountNumber());
+					System.out.println(confirmationCode + " | " + other.getConfirmationCode());
+					System.out.println(getTimestamp(datetime).getTime() + " | " + other.getTimePaid());
+					System.out.println(payedBy + " | " + other.getPaymentBy());
+				}
+				
+				return matches;
 			}
 		};
 		ip.setAccount(accountDao.getAccountByAccountNumber(accountNumber));

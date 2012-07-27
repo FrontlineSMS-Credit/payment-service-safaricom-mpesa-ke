@@ -77,23 +77,23 @@ public class MpesaPayBillServiceTest extends
 				PHONENUMBER_4, ACCOUNTNUMBER_4_4, "7950", "BH85UU125",
 				"LEO KIBWANA", "3/4/12 2:25 PM");
 		
-		//testing mpesa paybill message with account number in upper and lower case letters  
-		testIncomingPaymentProcessing("UII3267 Confirmed.\n"
-						+ "on 3/1/12 at 2:45 PM\n"
-						+ "Ksh3450 received from LEO KIBWANA 254722035990.\n"
-						+ "Account Number TEst\n"
-						+ "New Utility balance is Ksh27,802",
-				PHONENUMBER_4, ACCOUNTNUMBER_4_3, "3450", "UII3267",
-				"LEO KIBWANA", "3/1/12 2:45 PM");
-		
 		//testing mpesa paybill message with account number in lower case letters  
 		testIncomingPaymentProcessing("XOY89U757 Confirmed.\n"
 						+ "on 5/4/12 at 2:15 PM\n"
 						+ "Ksh350 received from LEO KIBWANA 254722035990.\n"
-						+ "Account Number test\n"
+						+ "Account Number testlower\n"
 						+ "New Utility balance is Ksh10,802",
 						PHONENUMBER_4, ACCOUNTNUMBER_4_1, "350", "XOY89U757",
 				"LEO KIBWANA", "5/4/12 2:15 PM");
+		
+		//testing mpesa paybill message with account number in upper and lower case letters  
+		testIncomingPaymentProcessing("UII3267 Confirmed.\n"
+						+ "on 3/1/12 at 2:45 PM\n"
+						+ "Ksh3450 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEstMixed\n"
+						+ "New Utility balance is Ksh27,802",
+				PHONENUMBER_4, ACCOUNTNUMBER_4_3, "3450", "UII3267",
+				"LEO KIBWANA", "3/1/12 2:45 PM");
 		
 	}
 
@@ -146,14 +146,14 @@ public class MpesaPayBillServiceTest extends
 				"UII3267 Confirmed.\n"
 						+ "on 3/1/12 at 2:45 PM\n"
 						+ "Ksh3450 received from LEO KIBWANA 254722035990.\n"
-						+ "Account Number TEst\n"
+						+ "Account Number TEstMixed\n"
 						+ "New Utility balance is Ksh27,802",
 				
 				"testing mpesa paybill message with account number in lower case letters", 
 				"XOY89U757 Confirmed.\n"
 						+ "on 5/4/12 at 2:15 PM\n"
 						+ "Ksh350 received from LEO KIBWANA 254722035990.\n"
-						+ "Account Number test\n"
+						+ "Account Number testlower\n"
 						+ "New Utility balance is Ksh10,802",
 							
 		};
