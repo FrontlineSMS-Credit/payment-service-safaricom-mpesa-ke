@@ -18,9 +18,8 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	private static final String PAYBILL_REGEX = "[A-Z0-9]+ Confirmed.\\s+"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[1-3])) at ([1]?\\d:[0-5]\\d) (AM|PM)\\s+"
 			+ "Ksh[,|\\d]+(|.[\\d]{2}) received from ([A-Za-z ]+) 2547[\\d]{8}.\\s+"
-			+ "Account Number (\\d+)\\s+"
+			+ "Account Number (\\d|[A-Za-z0-9]|[A-Za-z])+\\s+"
 			+ "New Utility balance is Ksh[,|\\d]+(|.[\\d]{2})";	
-
 	
 	private static final String BALANCE_REGEX = 
 		"[A-Z0-9]+ Confirmed.\n"

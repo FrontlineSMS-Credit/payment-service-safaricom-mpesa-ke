@@ -7,7 +7,7 @@ import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 
 
 public class MpesaPayBillServiceTest extends
-		MpesaPaymentServiceTest<MpesaPayBillService> {
+	MpesaPaymentServiceTest<MpesaPayBillService> {
 	
 	@Override
 	protected MpesaPayBillService createNewTestClass() {
@@ -57,6 +57,44 @@ public class MpesaPayBillServiceTest extends
 						+ "New Utility balance is Ksh50,802",
 				PHONENUMBER_2, ACCOUNTNUMBER_2_2, "123", "BHT57U225",
 				"ELLY ASAKHULU", "10/4/11 1:45 PM");
+
+			
+		//testing mpesa paybill message with account number in upper case letters  
+		testIncomingPaymentProcessing("FGRT8363D Confirmed.\n"
+						+ "on 5/1/12 at 2:45 PM\n"
+						+ "Ksh1350 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEST\n"
+						+ "New Utility balance is Ksh40,802",
+				PHONENUMBER_4, ACCOUNTNUMBER_4_2, "1350", "FGRT8363D",
+				"LEO KIBWANA", "5/1/12 2:45 PM");
+		
+		//testing mpesa paybill message with account number in alphanumeric  
+		testIncomingPaymentProcessing("BH85UU125 Confirmed.\n"
+						+ "on 3/4/12 at 2:25 PM\n"
+						+ "Ksh7950 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEST76576\n"
+						+ "New Utility balance is Ksh9,702",
+				PHONENUMBER_4, ACCOUNTNUMBER_4_4, "7950", "BH85UU125",
+				"LEO KIBWANA", "3/4/12 2:25 PM");
+		
+		//testing mpesa paybill message with account number in upper and lower case letters  
+		testIncomingPaymentProcessing("UII3267 Confirmed.\n"
+						+ "on 3/1/12 at 2:45 PM\n"
+						+ "Ksh3450 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEst\n"
+						+ "New Utility balance is Ksh27,802",
+				PHONENUMBER_4, ACCOUNTNUMBER_4_3, "3450", "UII3267",
+				"LEO KIBWANA", "3/1/12 2:45 PM");
+		
+		//testing mpesa paybill message with account number in lower case letters  
+		testIncomingPaymentProcessing("XOY89U757 Confirmed.\n"
+						+ "on 5/4/12 at 2:15 PM\n"
+						+ "Ksh350 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number test\n"
+						+ "New Utility balance is Ksh10,802",
+						PHONENUMBER_4, ACCOUNTNUMBER_4_1, "350", "XOY89U757",
+				"LEO KIBWANA", "5/4/12 2:15 PM");
+		
 	}
 
 	@Override
@@ -89,6 +127,35 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh123 received from ELLY 254723908002.\n"
 						+ "Account Number 0700000022\n"
 						+ "New Utility balance is Ksh50,802",
+						
+				"testing mpesa paybill message with account number in upper case letters",
+				"FGRT8363D Confirmed.\n"
+						+ "on 5/1/12 at 2:45 PM\n"
+						+ "Ksh1350 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEST\n"
+						+ "New Utility balance is Ksh40,802",
+				
+				"testing mpesa paybill message with account number in alphanumeric",
+				"BH85UU125 Confirmed.\n"
+						+ "on 3/4/12 at 2:25 PM\n"
+						+ "Ksh7950 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEST76576\n"
+						+ "New Utility balance is Ksh9,702",
+				
+				"testing mpesa paybill message with account number in upper and lower case letters",
+				"UII3267 Confirmed.\n"
+						+ "on 3/1/12 at 2:45 PM\n"
+						+ "Ksh3450 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number TEst\n"
+						+ "New Utility balance is Ksh27,802",
+				
+				"testing mpesa paybill message with account number in lower case letters", 
+				"XOY89U757 Confirmed.\n"
+						+ "on 5/4/12 at 2:15 PM\n"
+						+ "Ksh350 received from LEO KIBWANA 254722035990.\n"
+						+ "Account Number test\n"
+						+ "New Utility balance is Ksh10,802",
+							
 		};
 	}
 	
