@@ -57,6 +57,14 @@ public class MpesaPayBillServiceTest extends
 						+ "New Utility balance is Ksh50,802",
 				PHONENUMBER_2, ACCOUNTNUMBER_2_2, "123", "BHT57U225",
 				"ELLY ASAKHULU", "10/4/11 1:45 PM");
+
+		testIncomingPaymentProcessing("AB12AB123 Confirmed.\n" +
+						"on 26/7/12 at 2:59 PM \n" +
+						"Ksh20.00 received from BOB KIPLAGAT 254720123123.\n" +
+						"Account Number 1235 \n" +
+						"New Utility balance is Ksh7,240.00",
+				"+254720123123", "1235", "20", "AB12AB123",
+				"BOB KIPLAGAT", "26/7/12 2:59 PM");
 	}
 
 	@Override
@@ -89,6 +97,13 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh123 received from ELLY 254723908002.\n"
 						+ "Account Number 0700000022\n"
 						+ "New Utility balance is Ksh50,802",
+
+				"Test from Sharon's computer",
+				"AB12AB123 Confirmed.\n" +
+						"on 26/7/12 at 2:59 PM \n" +
+						"Ksh20.00 received from BOB KIPLAGAT 254720123123.\n" +
+						"Account Number 1235 \n" +
+						"New Utility balance is Ksh7,240.00"
 		};
 	}
 	
