@@ -272,7 +272,11 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 			final Object entity = ((EntitySavedNotification) notification).getDatabaseEntity();
 			if (entity instanceof FrontlineMessage) {
 				final FrontlineMessage message = (FrontlineMessage) entity;
-				processMessage(message);
+				try {
+					processMessage(message);
+				} catch(Exception ex) {
+					log.warn("Exception thrown while attempting to process message in payment service '" + this + "'", ex);
+				}
 			}
 		}
 	}
