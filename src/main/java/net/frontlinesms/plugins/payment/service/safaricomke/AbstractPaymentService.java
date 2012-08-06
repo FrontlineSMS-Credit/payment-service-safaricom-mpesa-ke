@@ -329,4 +329,10 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	void reportPaymentFromNewClient(IncomingPayment payment){
 		pluginController.reportPaymentByNewClient(payment.getPaymentBy(), payment.getAmountPaid());
 	}
+	
+//> CORE JAVA OVERRIDES
+	public String toString() {
+		return getClass().getSimpleName() + "::" +
+				(this.settings!=null? this.settings.getId(): "unsaved");
+	}
 }
