@@ -30,6 +30,8 @@ import org.smslib.stk.StkValuePrompt;
 
 @ConfigurableServiceProperties(name="MPESA Kenya Personal", icon="/icons/mpesa_ke_personal.png")
 public class MpesaPersonalService extends MpesaPaymentService {
+// TODO clean up the regex pattern parsing process across the file by referring to the main(constant) regex pattern as done in MpesaPayBillService.
+	
 //> MESSAGE CONTENT MATCHER CONSTANTS
 	private static final String INCOMING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed.\n" +
 			"You have received Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[\\d]{8}\non " +
@@ -489,7 +491,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	}
 	
 	@Override
-	public String toString() {
+	public String getName() {
 		return "M-PESA Kenya: Personal Service";
 	}
 

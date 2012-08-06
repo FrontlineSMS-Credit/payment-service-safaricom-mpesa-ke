@@ -3,6 +3,8 @@ package net.frontlinesms.plugins.payment.service.safaricomke;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
@@ -15,19 +17,12 @@ import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 
 @ConfigurableServiceProperties(name="MPESA Kenya PayBill", icon="/icons/mpesa_ke_paybill.png")
 public class MpesaPayBillService extends MpesaPaymentService {
-	private static final String PAYBILL_REGEX = "[A-Z0-9]+ Confirmed.\\s+"
-			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[1-3])) at ([1]?\\d:[0-5]\\d) (AM|PM)\\s+"
-			+ "Ksh[,|\\d]+(|.[\\d]{2}) received from ([A-Za-z ]+) 2547[\\d]{8}.\\s+"
-			+ "Account Number (\\d+)\\s+"
-			+ "New Utility balance is Ksh[,|\\d]+(|.[\\d]{2})";	
+	private static final String PAYBILL_REGEX = "(\\w+ Confirmed.)\\s+"
+			+ "(on ((([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[1-3])) at (([1]?\\d:[0-5]\\d) (AM|PM))))\\s+"
+			+ "(Ksh[,|\\d]+(|.[\\d]{2}) (received from ([A-Za-z ]+) (2547[\\d]{8}).))\\s+"
+			+ "(Account Number ((\\w)*))\\s+"
+			+ "(New Utility balance is Ksh[,|\\d]+(|.[\\d]{2}))";	
 
-	
-	private static final String BALANCE_REGEX = 
-		"[A-Z0-9]+ Confirmed.\n"
-		+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[1-3])) at ([1]?\\d:[0-5]\\d) (AM|PM)\n"
-		+ "Ksh[,|\\d]+ received from ([A-Za-z ]+) 2547[\\d]{8}.\n"
-		+ "Account Number (\\[A-Za-z]+|\\d+|[A-Za-z0-9]+)\n"
-		+ "New Utility balance is Ksh[,|\\d]+\n";
 	
 	public boolean isOutgoingPaymentEnabled() {
 		return super.isOutgoingPaymentEnabled();
@@ -35,39 +30,38 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	
 	@Override
 	protected boolean isValidBalanceMessage(FrontlineMessage message) {
-		return message.getTextContent().matches(BALANCE_REGEX);
+		return message.getTextContent().matches(PAYBILL_REGEX);
 	}
 	
 	@Override
 	protected void processBalance(FrontlineMessage message){
 	}
 	
+	Matcher getMatcher(FrontlineMessage message) {
+		Pattern paybillPattern = Pattern.compile(PAYBILL_REGEX);
+		Matcher matcher = paybillPattern.matcher(message.getTextContent());
+		matcher.matches();
+		return matcher;
+	}
+	
 	@Override
 	Account getAccount(FrontlineMessage message) {
-		String accNumber = getFirstMatch(message, "Account Number [A-Z0-9]*");
-		return accountDao.getAccountByAccountNumber(accNumber
-				.substring("Account Number ".length()));
+		Matcher matcher = getMatcher(message);
+		String accountNumber = matcher.group(17);
+		return accountDao.getAccountByAccountNumber(accountNumber);
 	}
 
 	@Override
 	String getPaymentBy(FrontlineMessage message) {
-		try {
-			String nameAndPhone = getFirstMatch(message, RECEIVED_FROM +" "+PAID_BY_PATTERN + " " + PHONE_PATTERN);
-			String nameWKsh = nameAndPhone.replace(RECEIVED_FROM, "");
-			String names = getFirstMatch(nameWKsh, PAID_BY_PATTERN).trim();
-			return names;
-		} catch (ArrayIndexOutOfBoundsException ex) {
-			throw new IllegalArgumentException(ex);
-		}
+		Matcher matcher = getMatcher(message);
+		String names = matcher.group(14);
+		return names;
 	}
 
 	@Override
 	Date getTimePaid(FrontlineMessage message) {
-		String longtext = message.getTextContent().replace("\\s", " ");
-		String section1 = longtext.split("on ")[1];
-		String datetimesection = section1.split(AMOUNT_PATTERN+ " " + RECEIVED_FROM)[0];
-		String datetime = datetimesection.replace(" at ", " ");
-
+		Matcher matcher = getMatcher(message);
+		String datetime = matcher.group(3).replace(" at ", " ");
 		Date date = null;
 		try {
 			date = new SimpleDateFormat(DATETIME_PATTERN).parse(datetime);
@@ -91,7 +85,7 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	}
 
 	@Override
-	public String toString() {
+	public String getName() {
 		return "M-PESA Kenya: Paybill Service";
 	}
 }

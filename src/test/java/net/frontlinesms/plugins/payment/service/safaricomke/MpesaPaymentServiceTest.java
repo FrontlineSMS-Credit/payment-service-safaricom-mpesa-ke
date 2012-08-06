@@ -73,19 +73,27 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	protected static final String PHONENUMBER_0 = "+254723908000";
 	protected static final String PHONENUMBER_1 = "+254723908001";
 	protected static final String PHONENUMBER_2 = "+254723908002";
-	protected static final String PHONENUMBER_3 = "+254701035990";
+	protected static final String PHONENUMBER_3 = "+254700035870";
+	protected static final String PHONENUMBER_4 = "+254722035990";
 	protected static final String ACCOUNTNUMBER_1_1 = "0700000011";
 	protected static final String ACCOUNTNUMBER_2_1 = "0700000021";
 	protected static final String ACCOUNTNUMBER_2_2 = "0700000022";
 	protected static final String ACCOUNTNUMBER_2_3 = "12345";
+	protected static final String ACCOUNTNUMBER_4_1 = "testlower";
+	protected static final String ACCOUNTNUMBER_4_2 = "TEST";
+	protected static final String ACCOUNTNUMBER_4_3 = "TEstMixed";
+	protected static final String ACCOUNTNUMBER_4_4 = "TEST76576";
 	
 	protected Client CLIENT_0;
 	protected Client CLIENT_1;
 	protected Client CLIENT_2;
 	protected Client CLIENT_3;
+	protected Client CLIENT_4;
+
 
 	/** instance under test */
 	protected E mpesaPaymentService;
+
 	
 	private CService cService;
 	@Mock private CATHandler_Wavecom_Stk aTHandler;
@@ -237,11 +245,13 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		Set<Account> accounts1 = mockAccounts(ACCOUNTNUMBER_1_1);
 		Set<Account> accounts2 = mockAccounts(ACCOUNTNUMBER_2_1, ACCOUNTNUMBER_2_2);
 		Set<Account> accounts3 = mockAccounts(ACCOUNTNUMBER_2_3);
+		Set<Account> accounts4 = mockAccounts(ACCOUNTNUMBER_4_1, ACCOUNTNUMBER_4_2, ACCOUNTNUMBER_4_3, ACCOUNTNUMBER_4_4);
 		
 	    CLIENT_0 = mockClient(0, PHONENUMBER_0, Collections.EMPTY_SET);
 	    CLIENT_1 = mockClient(1, PHONENUMBER_1, accounts1);
 	    CLIENT_2 = mockClient(2, PHONENUMBER_2, accounts2);
 	    CLIENT_3 = mockClient(3, PHONENUMBER_3, accounts3);
+	    CLIENT_4 = mockClient(4, PHONENUMBER_4, accounts4);
 
 	}
 	
@@ -403,7 +413,8 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 				
 				boolean matches = other.getPhoneNumber().equals(phoneNo) &&
 					other.getAmountPaid().equals(new BigDecimal(amount)) &&
-					accountNumber.equals(other.getAccount().getAccountNumber()) &&
+					((accountNumber == null && other.getAccount().getAccountNumber() == null) ||
+							accountNumber.equals(other.getAccount().getAccountNumber())) &&
 					other.getConfirmationCode().equals(confirmationCode) &&
 					other.getTimePaid().equals(getTimestamp(datetime).getTime()) &&
 					other.getPaymentBy().equals(payedBy);
