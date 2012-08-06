@@ -17,11 +17,13 @@ import org.creditsms.plugins.paymentview.data.domain.OutgoingPayment;
 
 @ConfigurableServiceProperties(name="MPESA Kenya PayBill", icon="/icons/mpesa_ke_paybill.png")
 public class MpesaPayBillService extends MpesaPaymentService {
-	private static final String PAYBILL_REGEX = "(\\w+ Confirmed.)\\s+"
-			+ "(on ((([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[1-3])) at (([1]?\\d:[0-5]\\d) (AM|PM))))\\s+"
-			+ "(Ksh[,|\\d]+(|.[\\d]{2}) (received from ([A-Za-z ]+) (2547[\\d]{8}).))\\s+"
-			+ "(Account Number ((\\w)*))\\s+"
-			+ "(New Utility balance is Ksh[,|\\d]+(|.[\\d]{2}))";	
+	private static final String DATETIME_PATTERN = "d/M/yy 'at' hh:mm a";
+	
+	private static final String PAYBILL_REGEX = "(\\w+) Confirmed.\\s+"
+			+ "on (((?:[1-2]?[1-9]|[1-2]0|3[0-1])/(?:[1-9]|1[0-2])/\\d\\d) at ((1?\\d:[0-5]\\d) (AM|PM)))\\s+"
+			+ "Ksh([,|\\d]+(|.[\\d]{2})) received from ([\\w\\s]+) (254[\\d]{9})\\.\\s+"
+			+ "Account Number (.*)\\s+"
+			+ "New Utility balance is Ksh([,|\\d]+(|.[\\d]{2}))";	
 
 	
 	public boolean isOutgoingPaymentEnabled() {
@@ -37,31 +39,31 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	protected void processBalance(FrontlineMessage message){
 	}
 	
-	Matcher getMatcher(FrontlineMessage message) {
+	private String getMatch(FrontlineMessage message, int groupIndex) {
 		Pattern paybillPattern = Pattern.compile(PAYBILL_REGEX);
 		Matcher matcher = paybillPattern.matcher(message.getTextContent());
 		matcher.matches();
-		return matcher;
+		return matcher.group(groupIndex);
 	}
 	
 	@Override
 	Account getAccount(FrontlineMessage message) {
-		Matcher matcher = getMatcher(message);
-		String accountNumber = matcher.group(17);
-		return accountDao.getAccountByAccountNumber(accountNumber);
+		return accountDao.getAccountByAccountNumber(getMatch(message, 11));
 	}
 
 	@Override
 	String getPaymentBy(FrontlineMessage message) {
-		Matcher matcher = getMatcher(message);
-		String names = matcher.group(14);
-		return names;
+		return getMatch(message, 9);
+	}
+	
+	@Override
+	String getPhoneNumber(FrontlineMessage message) {
+		return "+" + getMatch(message, 10);
 	}
 
 	@Override
 	Date getTimePaid(FrontlineMessage message) {
-		Matcher matcher = getMatcher(message);
-		String datetime = matcher.group(3).replace(" at ", " ");
+		String datetime = getMatch(message, 2);
 		Date date = null;
 		try {
 			date = new SimpleDateFormat(DATETIME_PATTERN).parse(datetime);
