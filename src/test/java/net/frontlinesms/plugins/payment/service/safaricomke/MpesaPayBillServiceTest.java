@@ -28,7 +28,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh950.00 received from BORIS BECKER 254723908002.\n"
 						+ "Account Number 0700000021\n"
 						+ "New Utility balance is Ksh50,802.00",
-				PHONENUMBER_2, ACCOUNTNUMBER_2_1, "950", "BH45UU225",
+				PHONENUMBER_2, ACCOUNTNUMBER_2_1, "0700000021",
+				"950", "BH45UU225",
 				"BORIS BECKER", "5/4/11 2:45 PM");
 	
 		//testing mpessa paybill message with paidby in lowercase  
@@ -37,16 +38,18 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh950 received from ian mbogua kuburi 254723908002.\n"
 						+ "Account Number 0700000021\n"
 						+ "New Utility balance is Ksh50,802",
-				PHONENUMBER_2, ACCOUNTNUMBER_2_1, "950", "BH45UU225",
+				PHONENUMBER_2, ACCOUNTNUMBER_2_1, "0700000021",
+				"950", "BH45UU225",
 				"ian mbogua kuburi", "5/4/11 2:45 PM");
 		
-//		testIncomingPaymentProcessing("CJ87ZK061 Confirmed. \n" +
-//						"on 22/6/12 at 3:41 PM \n" +
-//						"Ksh50.00 received from KEN KITUYI 254700035870. \n" +
-//						"Account Number 88888 \n" +
-//						"New Utility balance is Ksh4,100.00",
-//						PHONENUMBER_3, null, "50", "CJ87ZK061", 
-//				"KEN KITUYI", "22/6/12 3:41 PM");
+		testIncomingPaymentProcessing("CJ87ZK061 Confirmed. \n" +
+						"on 22/6/12 at 3:41 PM \n" +
+						"Ksh50.00 received from KEN KITUYI 254700035870. \n" +
+						"Account Number 88888 \n" +
+						"New Utility balance is Ksh4,100.00",
+						PHONENUMBER_3, null, "88888",
+						"50", "CJ87ZK061", 
+				"KEN KITUYI", "22/6/12 3:41 PM");
 		
 		// Check the payment time is processed rather than the balance time
 		testIncomingPaymentProcessing("BHT57U225 Confirmed.\n"
@@ -54,7 +57,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh123 received from ELLY ASAKHULU 254723908002.\n"
 						+ "Account Number 0700000022\n"
 						+ "New Utility balance is Ksh50,802",
-				PHONENUMBER_2, ACCOUNTNUMBER_2_2, "123", "BHT57U225",
+				PHONENUMBER_2, ACCOUNTNUMBER_2_2, "0700000022",
+				"123", "BHT57U225",
 				"ELLY ASAKHULU", "10/4/11 1:45 PM");
 
 		testIncomingPaymentProcessing("AB12AB123 Confirmed.\n" +
@@ -62,7 +66,8 @@ public class MpesaPayBillServiceTest extends
 						"Ksh20.00 received from BOB KIPLAGAT 254720123123.\n" +
 						"Account Number 1235 \n" +
 						"New Utility balance is Ksh7,240.00",
-				"+254720123123", null/* no account created previously */, "20", "AB12AB123",
+				"+254720123123", null/* no account created previously */, "1235",
+				"20", "AB12AB123",
 				"BOB KIPLAGAT", "26/7/12 2:59 PM");
 			
 		//testing mpesa paybill message with account number in upper case letters  
@@ -71,7 +76,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh1350 received from LEO KIBWANA 254722035990.\n"
 						+ "Account Number TEST\n"
 						+ "New Utility balance is Ksh40,802",
-				"+254722035990", ACCOUNTNUMBER_3_2, "1350", "FGRT8363D",
+				"+254722035990", ACCOUNTNUMBER_3_2, "TEST",
+				"1350", "FGRT8363D",
 				"LEO KIBWANA", "5/1/12 2:45 PM");
 		
 		//testing mpesa paybill message with account number in alphanumeric  
@@ -80,7 +86,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh7950 received from LEO KIBWANA 254722035990.\n"
 						+ "Account Number TEST76576\n"
 						+ "New Utility balance is Ksh9,702",
-				"+254722035990", ACCOUNTNUMBER_3_4, "7950", "BH85UU125",
+				"+254722035990", ACCOUNTNUMBER_3_4, "TEST76576",
+				"7950", "BH85UU125",
 				"LEO KIBWANA", "3/4/12 2:25 PM");
 		
 		//testing mpesa paybill message with account number in lower case letters  
@@ -89,7 +96,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh350 received from LEO KIBWANA 254722035990.\n"
 						+ "Account Number testlower\n"
 						+ "New Utility balance is Ksh10,802",
-						"+254722035990", ACCOUNTNUMBER_3_1, "350", "XOY89U757",
+						"+254722035990", ACCOUNTNUMBER_3_1, "testlower",
+						"350", "XOY89U757",
 				"LEO KIBWANA", "5/4/12 2:15 PM");
 		
 		//testing mpesa paybill message with account number in upper and lower case letters  
@@ -98,7 +106,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh3450 received from LEO KIBWANA 254722035990.\n"
 						+ "Account Number TEstMixed\n"
 						+ "New Utility balance is Ksh27,802",
-				"+254722035990", ACCOUNTNUMBER_3_3, "3450", "UII3267",
+				"+254722035990", ACCOUNTNUMBER_3_3, "TEstMixed",
+				"3450", "UII3267",
 				"LEO KIBWANA", "3/1/12 2:45 PM");
 		
 		//testing mpesa paybill message with account number in upper and lower case letters  
@@ -107,7 +116,8 @@ public class MpesaPayBillServiceTest extends
 						+ "Ksh3450 received from MR IMPOSSIBLE 254999999999.\n"
 						+ "Account Number with 2 spaces\n"
 						+ "New Utility balance is Ksh27,802",
-				"+254999999999", null, "3450", "UII3267",
+				"+254999999999", null, "with 2 spaces",
+				"3450", "UII3267",
 				"MR IMPOSSIBLE", "3/1/12 2:45 PM");
 	}
 

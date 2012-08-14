@@ -73,7 +73,8 @@ public class MpesaPersonalServiceTest extends
 				"BI94HR849 Confirmed.\n"
 						+ "You have received Ksh236 from\nJOHN KIU 254723908001\non 30/5/11 at 10:35 PM\n"
 						+ "New M-PESA balance is Ksh1,236", PHONENUMBER_1,
-				ACCOUNTNUMBER_1_1, "236", "BI94HR849", "JOHN KIU",
+				ACCOUNTNUMBER_1_1, "",
+				"236", "BI94HR849", "JOHN KIU",
 				"30/5/11 10:35 PM");
 
 		verify(logger, times(2)).info("No Fraud occured!");
@@ -123,7 +124,8 @@ public class MpesaPersonalServiceTest extends
 				"BI94HR849 Confirmed.\n"
 						+ "You have received Ksh1,235 from\nJOHN KIU 254723908001\non 30/5/11 at 10:35 PM\n"
 						+ "New M-PESA balance is Ksh1,236", PHONENUMBER_1,
-				ACCOUNTNUMBER_1_1, "1235", "BI94HR849", "JOHN KIU",
+				ACCOUNTNUMBER_1_1, "",
+				"1235", "BI94HR849", "JOHN KIU",
 				"30/5/11 10:35 PM");
 
 		mpesaPaymentService.setBalanceAmount(new BigDecimal("1"));
@@ -132,7 +134,8 @@ public class MpesaPersonalServiceTest extends
 				"BI94HR849 Confirmed.\n"
 						+ "You have received Ksh1,235 from\nyohan mwenyewe alibamba 254723908001\non 3/5/11 at 8:35 PM\n"
 						+ "New M-PESA balance is Ksh1,236", PHONENUMBER_1,
-				ACCOUNTNUMBER_1_1, "1235", "BI94HR849",
+				ACCOUNTNUMBER_1_1, "",
+				"1235", "BI94HR849",
 				"yohan mwenyewe alibamba", "3/5/11 8:35 PM");
 	}
 

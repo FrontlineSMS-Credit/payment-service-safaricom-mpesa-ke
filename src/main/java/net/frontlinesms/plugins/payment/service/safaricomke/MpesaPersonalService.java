@@ -174,7 +174,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		if (message.getEndpointId() != null) {
 			if((getSimImsi()+"@"+getModemSerial()).equals(message.getEndpointId())) {
 				if (isValidOutgoingPaymentPayBillConfirmation(message)) {
-					processOutgoingPayBillPayment(message);
+					processOutgoingPayBillConfirmation(message);
 				} else if (isFailedMpesaPayment(message)) {
 					logDao.error("Payment Message: Failed message",message.getTextContent());
 				} else if (isValidOutgoingPaymentConfirmation(message)) {
@@ -320,7 +320,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		});
 	}
 
-	private void processOutgoingPayBillPayment(final FrontlineMessage message) {
+	private void processOutgoingPayBillConfirmation(final FrontlineMessage message) {
 		queueOutgoingJob(new PaymentJob() {
 			public void run() {
 				try {
@@ -457,6 +457,11 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	Date getTimePaid(FrontlineMessage message) {
 		return getTimePaid(message, false);
 	}
+	
+	@Override
+	String getNotes(FrontlineMessage message) {
+		return "";
+	}
 
 	Date getTimePaid(FrontlineMessage message, boolean isOutgoingPayment) {
 		String section1 = "";
@@ -497,5 +502,15 @@ public class MpesaPersonalService extends MpesaPaymentService {
 
 	public PaymentServiceUiActionHandler getServiceActionUiHandler(UiGeneratorController ui) {
 		return new MpesaPersonalActionUiHandler(this, ui);
+	}
+
+	private String getPayBillAccount(FrontlineMessage message) {
+		String accNumber = getFirstMatch(message, "Account Number ((\\d|[A-Za-z0-9]|[A-Za-z])*)");
+		if(accNumber.equals("")){
+			return "";
+		} else {
+			return accNumber
+			.substring("Account Number ".length());
+		}
 	}
 }

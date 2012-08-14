@@ -22,7 +22,7 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	private static final String PAYBILL_REGEX = "(\\w+) Confirmed.\\s+"
 			+ "on (((?:[1-2]?[1-9]|[1-2]0|3[0-1])/(?:[1-9]|1[0-2])/\\d\\d) at ((1?\\d:[0-5]\\d) (AM|PM)))\\s+"
 			+ "Ksh([,|\\d]+(|.[\\d]{2})) received from ([\\w\\s]+) (254[\\d]{9})\\.\\s+"
-			+ "Account Number (.*)\\s+"
+			+ "Account Number (.*\\S)\\s+"
 			+ "New Utility balance is Ksh([,|\\d]+(|.[\\d]{2}))";	
 
 	
@@ -46,9 +46,13 @@ public class MpesaPayBillService extends MpesaPaymentService {
 		return matcher.group(groupIndex);
 	}
 	
+	private String getAccountNumber(FrontlineMessage message) {
+		return getMatch(message, 11);
+	}
+	
 	@Override
 	Account getAccount(FrontlineMessage message) {
-		return accountDao.getAccountByAccountNumber(getMatch(message, 11));
+		return accountDao.getAccountByAccountNumber(getAccountNumber(message));
 	}
 
 	@Override
@@ -59,6 +63,11 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	@Override
 	String getPhoneNumber(FrontlineMessage message) {
 		return "+" + getMatch(message, 10);
+	}
+	
+	@Override
+	String getNotes(FrontlineMessage message) {
+		return getAccountNumber(message);
 	}
 
 	@Override

@@ -234,6 +234,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		payment.setPhoneNumber(getPhoneNumber(message));
 		payment.setAmountPaid(getAmount(message));
 		payment.setConfirmationCode(getConfirmationCode(message));
+		payment.setNotes(getNotes(message));
 		payment.setPaymentBy(getPaymentBy(message));
 		payment.setTimePaid(getTimePaid(message));
 		payment.setServiceSettings(getSettings());
@@ -254,12 +255,11 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 					plainTextMsgContent = plainTextMsgContent.replace("\n", "");
 					Account account = getAccount(message);
 					updateStatus(PaymentStatus.RECEIVING);
-					if (account != null){
+					if (account != null) {
 						final Target tgt = targetDao.getActiveTargetByAccount(account.getAccountNumber());
 						if (tgt != null){//account is a non generic one
 							payment = createIncomingPayment(account,tgt, message);
 							performIncominPaymentFraudCheck(message, payment);
-							payment = setPayBillNotes(payment, message);
 							incomingPaymentDao.saveIncomingPayment(payment);
 
 							// Check if the client has reached his targeted amount
@@ -276,7 +276,6 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 						} else {
 							//account is a generic one(standard) or a non-generic without any active target(paybill)
 							payment = createIncomingPayment(account,null, message);
-							payment = setPayBillNotes(payment, message);
 							performIncominPaymentFraudCheck(message, payment);
 							incomingPaymentDao.saveIncomingPayment(payment);
 							updateStatus(PaymentStatus.PROCESSED);
@@ -311,7 +310,6 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							reportPaymentFromNewClient(createIncomingPayment(account,null, message));
 					    }
 						payment = createIncomingPayment(account,null, message);
-						payment = setPayBillNotes(payment, message);
 						incomingPaymentDao.saveIncomingPayment(payment);
 						updateStatus(PaymentStatus.PROCESSED);
 						
@@ -343,13 +341,6 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 				}
 			}
 		});
-	}
-	
-	IncomingPayment setPayBillNotes(IncomingPayment payment, FrontlineMessage message) {
-		if (getName().equals("M-PESA Kenya: Paybill Service")) {
-			payment.setNotes(getPayBillAccount(message));
-		}
-		return payment;
 	}
 	
 	private void processReversePayment(final FrontlineMessage message) {
@@ -492,16 +483,6 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 			str = "";
 		}
 		return str;
-	}
-	
-	String getPayBillAccount(FrontlineMessage message) {
-		String accNumber = getFirstMatch(message, "Account Number ((\\d|[A-Za-z0-9]|[A-Za-z])*)");
-		if(accNumber.equals("")){
-			return "";
-		} else {
-			return accNumber
-			.substring("Account Number ".length());
-		}
 	}
 	
 	String getPayBillName(final FrontlineMessage message) {

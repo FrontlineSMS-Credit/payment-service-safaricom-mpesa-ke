@@ -287,6 +287,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	abstract boolean isMessageTextValid(String message);
 	abstract Account getAccount(FrontlineMessage message);
 	abstract String getName();
+	abstract String getNotes(FrontlineMessage message);
 	abstract String getPaymentBy(FrontlineMessage message);
 	protected abstract boolean isValidBalanceMessage(FrontlineMessage message);
 

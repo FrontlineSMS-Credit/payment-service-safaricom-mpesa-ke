@@ -390,8 +390,9 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 	}
 
 	protected void testIncomingPaymentProcessing(String messageText,
-			final String phoneNo, final String accountNumber, final String amount,
-			final String confirmationCode, final String payedBy, final String datetime) {
+			final String phoneNo, final String accountNumber, final String notes, 
+			final String amount, final String confirmationCode,
+			final String payedBy, final String datetime) {
 		// then
 		assertTrue(mpesaPaymentService instanceof EventObserver);
 		
@@ -402,30 +403,44 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 		IncomingPayment ip = new IncomingPayment() {
 			@Override
 			public boolean equals(Object that) {
-				
 				if(!(that instanceof IncomingPayment)) return false;
 				IncomingPayment other = (IncomingPayment) that;
 				
-				boolean matches = other.getPhoneNumber().equals(phoneNo) &&
-					other.getAmountPaid().equals(new BigDecimal(amount)) &&
-					((accountNumber == null && other.getAccount().getAccountNumber() == null) ||
-							(other.getAccount() != null &&
-									accountNumber.equals(other.getAccount().getAccountNumber()))) &&
-					other.getConfirmationCode().equals(confirmationCode) &&
-					other.getTimePaid().equals(getTimestamp(datetime).getTime()) &&
-					other.getPaymentBy().equals(payedBy);
-				
-				if(!matches) {
-					System.out.println("EXPECTED | ACTUAL");
-					System.out.println(phoneNo + " | " + other.getPhoneNumber());
-					System.out.println(amount + " | " + other.getAmountPaid());
-					System.out.println(accountNumber + " | " + (other.getAccount()==null?null:other.getAccount().getAccountNumber()));
-					System.out.println(confirmationCode + " | " + other.getConfirmationCode());
-					System.out.println(getTimestamp(datetime).getTime() + " | " + other.getTimePaid());
-					System.out.println(payedBy + " | " + other.getPaymentBy());
+				if(!other.getPhoneNumber().equals(phoneNo)) {
+					printDifferent("Phone numbers", phoneNo, other.getPhoneNumber());
+					return false;
+				}
+				if(!other.getPaymentBy().equals(payedBy)) {
+					printDifferent("Payment by", payedBy, other.getPaymentBy());
+					return false;
+				}
+				if(!other.getAmountPaid().equals(new BigDecimal(amount))) {
+					printDifferent("amount paid", amount, other.getAmountPaid());
+					return false;
+				}
+				if(!notes.equals(other.getNotes())) {
+					printDifferent("notes", notes, other.getNotes());
+					return false;
+				}
+				if(!confirmationCode.equals(other.getConfirmationCode())) {
+					printDifferent("confirmation code", confirmationCode, other.getConfirmationCode());
+					return false;
+				}
+				if(!other.getTimePaid().equals(getTimestamp(datetime).getTime())) {
+					printDifferent("time paid", getTimestamp(datetime).getTime(), other.getTimePaid());
+					return false;
+				}
+				if((accountNumber == null && other.getAccount() != null && other.getAccount().getAccountNumber() != null) ||
+						accountNumber != null && !accountNumber.equals(other.getAccount().getAccountNumber())) {
+					printDifferent("account number", accountNumber, other.getAccount()==null? null: other.getAccount().getAccountNumber());
+					return false;
 				}
 				
-				return matches;
+				return true;
+			}
+
+			private void printDifferent(String field, Object expected, Object actual) {
+				System.out.println(field + " different: expected '" + expected + "' but got '" + actual + "'");
 			}
 		};
 		ip.setAccount(accountDao.getAccountByAccountNumber(accountNumber));
