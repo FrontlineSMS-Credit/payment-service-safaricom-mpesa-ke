@@ -30,8 +30,6 @@ import org.smslib.stk.StkValuePrompt;
 
 @ConfigurableServiceProperties(name="MPESA Kenya Personal", icon="/icons/mpesa_ke_personal.png")
 public class MpesaPersonalService extends MpesaPaymentService {
-// TODO clean up the regex pattern parsing process across the file by referring to the main(constant) regex pattern as done in MpesaPayBillService.
-	
 //> MESSAGE CONTENT MATCHER CONSTANTS
 	private static final String INCOMING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed.\n" +
 			"You have received Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[\\d]{8}\non " +
@@ -69,6 +67,23 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	private static final String BALANCE_REGEX = "[A-Z0-9]+ Confirmed.\n"
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\n"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M))";
+
+//> STATIC CONSTANTS
+	/**
+	 * M-PESA personal service transaction fee tresholds:
+	 * { MAXIMUM-PAYMENT-FOR-THIS-FEE, TRANSACTION-FEE }
+	 * N.B. the maximum payment is assumed for all transactions above the
+	 * final threshold in this array, and is stored in {@link #MAX_TRANSACTION_FEE}.
+	 */
+	private static final String[][] TRANSACTION_FEES = {
+		{ "49", "3" },
+		{ "100", "5" },
+		{ "500", "25" },
+		{ "5000", "30" },
+		{ "20000", "50" },
+		{ "45000", "75" },
+	};
+	private static final String MAX_TRANSACTION_FEE = "100";
 
 //> INSTANCE METHODS
 	public boolean isOutgoingPaymentEnabled() {
@@ -370,25 +385,36 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		// c == p - a - f
 		// It might be wise that
 		BigDecimal amountPaid = outgoingPayment.getAmountPaid();
-		BigDecimal transactionFees = new BigDecimal(0);
+		BigDecimal transactionFee = calculateTransactionFee(amountPaid);
 		BigDecimal currentBalance = getBalance(message).setScale(2, BigDecimal.ROUND_HALF_DOWN);
-		
-		if (amountPaid.compareTo(new BigDecimal(100)) <= 0) {
-			transactionFees = new BigDecimal(10);
-		} else if (amountPaid.compareTo(new BigDecimal(35000)) <= 0) {
-			transactionFees = new BigDecimal(30);
-		} else {
-			transactionFees = new BigDecimal(60);
-		}
 
 		BigDecimal expectedBalance = (tempBalanceAmount
-			.subtract(outgoingPayment.getAmountPaid().add(transactionFees))).setScale(2, BigDecimal.ROUND_HALF_DOWN);
+			.subtract(amountPaid.add(transactionFee))).setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
 		updateBalance(currentBalance, outgoingPayment.getConfirmationCode(),
 				new Date(outgoingPayment.getTimeConfirmed()), "Outgoing Payment");
 		
 		informUserOfFraudIfCommitted(expectedBalance, currentBalance,
 				message.getTextContent());
+	}
+
+	/**
+	 * Calculate the MPESA transaction fee.  These fees will channge over time,
+	 * and were correct as of 23/8/12.  Latest fees can be found on Safaricom
+	 * website, currently http://www.safaricom.co.ke/personal/m-pesa/m-pesa-services-tariffs/tariffs
+	 * This method currently assumes that all payments are to registered MPESA
+	 * users.
+	 * @param amountPaid The amount of money transferred
+	 * @return
+	 */
+	BigDecimal calculateTransactionFee(BigDecimal amountPaid) {
+		for(String[] thresholdFeePair : TRANSACTION_FEES) {
+			BigDecimal threshold = new BigDecimal(thresholdFeePair[0]);
+			if(amountPaid.compareTo(threshold) <= 0) {
+				return new BigDecimal(thresholdFeePair[1]);
+			}
+		}
+		return new BigDecimal(MAX_TRANSACTION_FEE);
 	}
 
 	private boolean isValidOutgoingPaymentConfirmation(FrontlineMessage message) {

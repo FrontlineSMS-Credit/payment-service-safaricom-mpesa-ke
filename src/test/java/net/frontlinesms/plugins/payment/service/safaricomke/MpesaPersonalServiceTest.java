@@ -147,7 +147,34 @@ public class MpesaPersonalServiceTest extends
 				+ "on 12/2/11 at 12:23 AM", "1235", "NB56GF6JK",
 				"12/2/11 12:23 AM");
 	}
-
+	
+	public void testTransactionFeeCalculation() {
+		String[][] testData = {
+				{ "12", "3" },
+				{ "50", "5" },
+				{ "74", "5" },
+				{ "184", "25" },
+				{ "295", "25" },
+				{ "500", "25" },
+				{ "501", "30" },
+				{ "5000", "30" },
+				{ "5001", "50" },
+				{ "20000", "50" },
+				{ "20001", "75" },
+				{ "45000", "75" },
+				{ "45001", "100" },
+				{ "70000", "100" },
+		};
+		
+		for(String[] amountPaidAndExpectedFee : testData) {
+			String amountPaid = amountPaidAndExpectedFee[0];
+			String expectedFee = amountPaidAndExpectedFee[1];
+			String actualFee = mpesaPaymentService.calculateTransactionFee(new BigDecimal(amountPaid)).toString();
+			assertEquals(expectedFee, actualFee);
+		}
+	}
+	
+//> OVERRIDES FOR DATA DRIVEN TESTS
 	@Override
 	String[] getValidMessagesText() {
 		return new String[] {
