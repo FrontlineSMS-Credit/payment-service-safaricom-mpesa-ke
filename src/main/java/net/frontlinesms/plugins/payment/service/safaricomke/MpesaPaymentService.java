@@ -381,7 +381,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		BigDecimal tempBalance = getBalanceAmount();
 		BigDecimal expectedBalance = tempBalance.subtract(amountPaid);
 		
-		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
+		informUserOfFraudIfCommitted(expectedBalance, actualBalance, message.getTextContent());
 		updateBalance(actualBalance, getConfirmationCode(message), new Date(message.getDate()), "BalanceEnquiry");
 	}
 
@@ -401,7 +401,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		BigDecimal expectedBalance = tempBalance.subtract(BD_BALANCE_ENQUIRY_CHARGE);
 		
 		BigDecimal actualBalance = getAmount(message);
-		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
+		informUserOfFraudIfCommitted(expectedBalance, actualBalance, message.getTextContent());
 		
 		updateBalance(actualBalance, getConfirmationCode(message), getTimePaid(message), "BalanceEnquiry");
 	}
@@ -413,7 +413,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		BigDecimal expectedBalance = payment.getAmountPaid().add(getBalanceAmount());
 		
 		//c == p + a
-		informUserOfFraudIfCommitted(actualBalance, expectedBalance, message.getTextContent());
+		informUserOfFraudIfCommitted(expectedBalance, actualBalance, message.getTextContent());
 		
 		updateBalance(actualBalance, payment.getConfirmationCode(), new Date(payment.getTimePaid()), "IncomingPayment");
 	}
@@ -429,6 +429,7 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		} else {
 			String message = "Fraud commited on "+ this.toString() +"? Was expecting balance as: "+expectedBalance+", but was "+actualBalance;
 
+			// TODO surely fraud message should be i18n'd for logs?
 			logDao.saveLogMessage(
 					new LogMessage(LogMessage.LogLevel.WARNING,
 						   	message,
