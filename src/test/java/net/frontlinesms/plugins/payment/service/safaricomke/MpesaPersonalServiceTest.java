@@ -140,12 +140,20 @@ public class MpesaPersonalServiceTest extends
 	}
 
 	public void testBalanceProcessing() {
-		mpesaPaymentService.setBalanceAmount(new BigDecimal("1235"));
-
 		testBalanceProcessing("NB56GF6JK Confirmed.\n"
-				+ "Your M-PESA balance was Ksh1,235\n"
-				+ "on 12/2/11 at 12:23 AM", "1235", "NB56GF6JK",
+						+ "Your M-PESA balance was Ksh1,235\n"
+						+ "on 12/2/11 at 12:23 AM",
+				"1235",
+				"NB56GF6JK",
 				"12/2/11 12:23 AM");
+		
+		testBalanceProcessing("CO49VW201 Confirmed. \n" +
+						"Your M-PESA balance was Ksh421.00\n" +
+						"on 22/8/12 at 1:00 PM.\n" +
+						"PIN YAKO SIRI YAKO",
+				"421",
+				"CO49VW201",
+				"22/8/12 1:00 PM");
 	}
 	
 	public void testTransactionFeeCalculation() {

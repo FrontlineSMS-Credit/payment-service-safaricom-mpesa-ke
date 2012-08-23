@@ -482,7 +482,8 @@ public abstract class MpesaPaymentServiceTest<E extends MpesaPaymentService> ext
 			String confirmationMessage, String timestamp) {
 		FrontlineMessage message = mockMessage("MPESA", messageText);
 		
-		assertTrue(mpesaPaymentService.isValidBalanceMessage(message));
+		assertTrue("Not a valid balance message.",
+				mpesaPaymentService.isValidBalanceMessage(message));
 		
 		notifyAndWait_incoming(new EntitySavedNotification<FrontlineMessage>(message));
 		

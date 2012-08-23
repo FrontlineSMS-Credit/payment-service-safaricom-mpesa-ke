@@ -64,9 +64,9 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			+ "sent to ([A-Za-z ]+) (\\+254[\\d]{9}|[\\d|-])+ "
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )"
 			+ "New M-PESA balance is Ksh([,|.|\\d]+)";
-	private static final String BALANCE_REGEX = "[A-Z0-9]+ Confirmed.\n"
-			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\n"
-			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M))";
+	private static final String BALANCE_REGEX = "(?s)[A-Z0-9]+ Confirmed.\\s+"
+			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\\s+"
+			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M)).*";
 
 //> STATIC CONSTANTS
 	/**
@@ -384,15 +384,15 @@ public class MpesaPersonalService extends MpesaPaymentService {
 		// It might be wise that
 		BigDecimal amountPaid = outgoingPayment.getAmountPaid();
 		BigDecimal transactionFee = calculateTransactionFee(amountPaid);
-		BigDecimal currentBalance = getBalance(message).setScale(2, BigDecimal.ROUND_HALF_DOWN);
+		BigDecimal reportedBalance = getBalance(message).setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
-		BigDecimal expectedBalance = (tempBalanceAmount
-			.subtract(amountPaid.add(transactionFee))).setScale(2, BigDecimal.ROUND_HALF_DOWN);
+		BigDecimal expectedBalance = (tempBalanceAmount.subtract(amountPaid.add(transactionFee)))
+				.setScale(2, BigDecimal.ROUND_HALF_DOWN);
 
-		updateBalance(currentBalance, outgoingPayment.getConfirmationCode(),
+		updateBalance(reportedBalance, outgoingPayment.getConfirmationCode(),
 				new Date(outgoingPayment.getTimeConfirmed()), "Outgoing Payment");
 		
-		informUserOfFraudIfCommitted(expectedBalance, currentBalance,
+		informUserOfFraudIfCommitted(expectedBalance, reportedBalance,
 				message.getTextContent());
 	}
 
