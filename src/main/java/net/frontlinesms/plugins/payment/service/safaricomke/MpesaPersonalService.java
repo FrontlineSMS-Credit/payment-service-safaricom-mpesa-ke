@@ -130,9 +130,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 								}
 								final StkResponse enterAmountResponse = cService
 										.stkRequest(
-												((StkValuePrompt) enterPhoneNumberResponse)
-														.getRequest(), amount
-														.toString());
+												((StkValuePrompt) enterPhoneNumberResponse).getRequest(),
+												amount.toString());
 								if (!(enterAmountResponse instanceof StkValuePrompt)) {
 									logDao.error("amount rejected", "");
 									outgoingPayment.setStatus(OutgoingPayment.Status.ERROR);
@@ -235,8 +234,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					List<OutgoingPayment> outgoingPayments = new ArrayList<OutgoingPayment>();
 					if (!getAmount(message).toString().equals("")){
 						 outgoingPayments = outgoingPaymentDao
-							.getByAmountPaidAndStatus(new BigDecimal(
-											getAmount(message).toString()),
+							.getByAmountPaidAndStatus(getAmount(message),
 									OutgoingPayment.Status.UNCONFIRMED);
 					}
 
@@ -269,8 +267,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 					if (!getPhoneNumber(message).equals("")){
 						 outgoingPayments = outgoingPaymentDao
 							.getByPhoneNumberAndAmountPaid(
-									getPhoneNumber(message), new BigDecimal(
-											getAmount(message).toString()),
+									getPhoneNumber(message),
+											getAmount(message),
 									OutgoingPayment.Status.UNCONFIRMED);
 					}
 
@@ -519,11 +517,6 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	@Override
 	boolean isMessageTextValid(String message) {
 		return message.matches(INCOMING_PAYMENT_REGEX);
-	}
-	
-	@Override
-	public String getName() {
-		return "M-PESA Kenya: Personal Service";
 	}
 
 	public PaymentServiceUiActionHandler getServiceActionUiHandler(UiGeneratorController ui) {

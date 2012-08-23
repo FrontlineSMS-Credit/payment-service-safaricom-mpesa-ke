@@ -148,9 +148,8 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 							}
 							final StkResponse enterAmountResponse = cService
 							.stkRequest(
-									((StkValuePrompt) enterAccountNumberResponse)
-											.getRequest(), amount
-											.toString());
+									((StkValuePrompt) enterAccountNumberResponse).getRequest(),
+											amount.toString());
 							if (!(enterAmountResponse instanceof StkValuePrompt)) {
 								logDao.saveLogMessage(LogMessage.error(
 										"amount rejected", ""));

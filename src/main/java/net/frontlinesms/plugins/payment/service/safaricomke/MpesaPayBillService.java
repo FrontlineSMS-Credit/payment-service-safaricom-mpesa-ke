@@ -94,9 +94,4 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	public PaymentServiceUiActionHandler getServiceActionUiHandler(UiGeneratorController ui) {
 		return null;
 	}
-
-	@Override
-	public String getName() {
-		return "M-PESA Kenya: Paybill Service";
-	}
 }

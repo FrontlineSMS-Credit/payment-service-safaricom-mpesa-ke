@@ -21,6 +21,7 @@ import net.frontlinesms.plugins.payment.service.PaymentService;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
 import net.frontlinesms.plugins.payment.service.PaymentStatus;
 import net.frontlinesms.serviceconfig.ConfigurableService;
+import net.frontlinesms.serviceconfig.ConfigurableServiceProperties;
 import net.frontlinesms.serviceconfig.PasswordString;
 import net.frontlinesms.serviceconfig.SmsModemReference;
 import net.frontlinesms.serviceconfig.StructuredProperties;
@@ -286,7 +287,6 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	abstract Date getTimePaid(FrontlineMessage message);
 	abstract boolean isMessageTextValid(String message);
 	abstract Account getAccount(FrontlineMessage message);
-	abstract String getName();
 	abstract String getNotes(FrontlineMessage message);
 	abstract String getPaymentBy(FrontlineMessage message);
 	protected abstract boolean isValidBalanceMessage(FrontlineMessage message);
@@ -338,7 +338,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 	
 //> CORE JAVA OVERRIDES
 	public String toString() {
-		return getClass().getSimpleName() + "::" +
+		return this.getClass().getAnnotation(ConfigurableServiceProperties.class).name() +" : " +
 				(this.settings!=null? this.settings.getId(): "unsaved");
 	}
 }
