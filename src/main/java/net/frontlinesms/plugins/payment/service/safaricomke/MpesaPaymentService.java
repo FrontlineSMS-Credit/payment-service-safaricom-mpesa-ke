@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.frontlinesms.data.DuplicateKeyException;
 import net.frontlinesms.data.domain.Contact;
@@ -399,10 +401,10 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		BigDecimal tempBalance = getBalanceAmount();
 		BigDecimal expectedBalance = tempBalance.subtract(BD_BALANCE_ENQUIRY_CHARGE);
 		
-		BigDecimal actualBalance = getAmount(message);
-		informUserOfFraudIfCommitted(expectedBalance, actualBalance, message.getTextContent());
+		BigDecimal reportedBalance = getAmount(message);
+		informUserOfFraudIfCommitted(expectedBalance, reportedBalance, message.getTextContent());
 		
-		updateBalance(actualBalance, getConfirmationCode(message), getTimePaid(message), "BalanceEnquiry");
+		updateBalance(reportedBalance, getConfirmationCode(message), getTimePaid(message), "BalanceEnquiry");
 	}
 	
 	synchronized void performIncominPaymentFraudCheck(final FrontlineMessage message,
@@ -512,5 +514,12 @@ public abstract class MpesaPaymentService extends AbstractPaymentService {
 		} else {
 			throw new SMSLibDeviceException("StkResponse Error Returned.");
 		}
+	}
+
+	protected String getMatch(FrontlineMessage message, String regex, int groupIndex) {
+		Pattern paybillPattern = Pattern.compile(regex);
+		Matcher matcher = paybillPattern.matcher(message.getTextContent());
+		matcher.matches();
+		return matcher.group(groupIndex);
 	}
 }

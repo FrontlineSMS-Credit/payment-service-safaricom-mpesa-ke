@@ -3,8 +3,6 @@ package net.frontlinesms.plugins.payment.service.safaricomke;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import net.frontlinesms.data.domain.FrontlineMessage;
 import net.frontlinesms.plugins.payment.service.PaymentServiceException;
@@ -40,10 +38,7 @@ public class MpesaPayBillService extends MpesaPaymentService {
 	}
 	
 	private String getMatch(FrontlineMessage message, int groupIndex) {
-		Pattern paybillPattern = Pattern.compile(PAYBILL_REGEX);
-		Matcher matcher = paybillPattern.matcher(message.getTextContent());
-		matcher.matches();
-		return matcher.group(groupIndex);
+		return super.getMatch(message, PAYBILL_REGEX, groupIndex);
 	}
 	
 	private String getAccountNumber(FrontlineMessage message) {

@@ -148,8 +148,8 @@ public class MpesaPersonalServiceTest extends
 				"12/2/11 12:23 AM");
 		
 		testBalanceProcessing("CO49VW201 Confirmed. \n" +
-						"Your M-PESA balance was Ksh421.00\n" +
-						"on 22/8/12 at 1:00 PM.\n" +
+						"Your M-PESA balance was Ksh421.00on" +
+						" 22/8/12 at 1:00 PM.\n" +
 						"PIN YAKO SIRI YAKO",
 				"421",
 				"CO49VW201",

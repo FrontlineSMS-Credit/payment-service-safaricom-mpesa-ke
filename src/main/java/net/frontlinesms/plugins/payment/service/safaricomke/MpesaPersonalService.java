@@ -38,7 +38,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	/** example matching string: Failed. M-PESA cannot send Ksh67,100.00 to 254704593656. For more information call or SMS customer services on 234. */
 	private static final String SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX  = 
 			"Failed. M-PESA cannot send Ksh([,|.|\\d]+) to 2547[\\d]{8}. " +
-			"For more information call or SMS customer services on \\d{3}";
+			"For more information call or SMS customer services on \\d+";
 	private static final String OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX  =
 			"Failed. \nNot enough money in your M-PESA account to send Ksh[,|.|\\d]+.00. " +
 			"You must be able to pay the transaction fee as well as the requested " +
@@ -64,9 +64,9 @@ public class MpesaPersonalService extends MpesaPaymentService {
 			+ "sent to ([A-Za-z ]+) (\\+254[\\d]{9}|[\\d|-])+ "
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )"
 			+ "New M-PESA balance is Ksh([,|.|\\d]+)";
-	private static final String BALANCE_REGEX = "(?s)[A-Z0-9]+ Confirmed.\\s+"
-			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\\s+"
-			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at (([1]?\\d:[0-5]\\d) ([A|P]M)).*";
+	private static final String BALANCE_REGEX = "(?s)[A-Z0-9]+ Confirmed.\\s*"
+			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\\s*"
+			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at\\s*(([1]?\\d:[0-5]\\d) ([A|P]M)).*";
 
 //> STATIC CONSTANTS
 	/**
@@ -489,11 +489,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 
 	Date getTimePaid(FrontlineMessage message, boolean isOutgoingPayment) {
 		String section1 = "";
-		if (isOutgoingPayment) {
-			section1 = message.getTextContent().split(" on ")[1];
-		} else {
-			section1 = message.getTextContent().split("\non ")[1];
-		}
+		section1 = message.getTextContent().split("on ")[1];
 		String datetimesection = section1.split("New M-PESA balance")[0];
 		String datetime = datetimesection.replace(" at ", " ");
 
