@@ -205,7 +205,7 @@ public abstract class AbstractPaymentService implements PaymentService, EventObs
 		setProperty(PROPERTY_SIM_IMSI, simImsi);
 	}
 	
-	void updateBalance(BigDecimal amount, String confirmationCode, Date timestamp, String method) {
+	synchronized void updateBalance(BigDecimal amount, String confirmationCode, Date timestamp, String method) {
 		setBalanceAmount(amount);
 		setBalanceConfirmationCode(confirmationCode);
 		setBalanceDateTime(timestamp);
