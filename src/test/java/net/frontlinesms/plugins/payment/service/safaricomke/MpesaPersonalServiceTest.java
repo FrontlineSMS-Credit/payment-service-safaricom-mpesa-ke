@@ -137,6 +137,14 @@ public class MpesaPersonalServiceTest extends
 				ACCOUNTNUMBER_1_1, "",
 				"1235", "BI94HR849",
 				"yohan mwenyewe alibamba", "3/5/11 8:35 PM");
+
+		testIncomingPaymentProcessing(
+				"EP06JS111 Confirmed. You have received Ksh2,500.00 from IVAN OREILLY 254712345678 on 4/2/14 at 1:40 PM New M-PESA balance is Ksh2,509.00.PIN YAKO SIRI YAKO",
+				"+254712345678",
+				null, "",
+				"2500", "EP06JS111",
+				"IVAN OREILLY",
+				"4/2/14 1:40 PM");
 	}
 
 	public void testBalanceProcessing() {

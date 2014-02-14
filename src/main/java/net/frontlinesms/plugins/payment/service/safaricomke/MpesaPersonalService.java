@@ -31,42 +31,42 @@ import org.smslib.stk.StkValuePrompt;
 @ConfigurableServiceProperties(name="MPESA Kenya Personal", icon="/icons/mpesa_ke_personal.png")
 public class MpesaPersonalService extends MpesaPaymentService {
 //> MESSAGE CONTENT MATCHER CONSTANTS
-	private static final String INCOMING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed.\n" +
-			"You have received Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[\\d]{8}\non " +
-			"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) (at) ([1]?\\d:[0-5]\\d) (AM|PM)\n" +
-			"New M-PESA balance is Ksh[,|.|\\d]+";
+	private static final String INCOMING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed.\\s*" +
+			"You have received Ksh[,|.|\\d]+ from\\s+([A-Za-z ]+) 2547[\\d]{8}\\s+on\\s+" +
+			"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d))\\s+(at)\\s+([1]?\\d:[0-5]\\d)\\s+(AM|PM)\\s+" +
+			"New M-PESA balance is Ksh[,|.|\\d]+([^\\d].*)?";
 	/** example matching string: Failed. M-PESA cannot send Ksh67,100.00 to 254704593656. For more information call or SMS customer services on 234. */
 	private static final String SENDING_PAYMENT_TO_SAME_ACCOUNT_REGEX  = 
-			"Failed. M-PESA cannot send Ksh([,|.|\\d]+) to 2547[\\d]{8}. " +
+			"Failed.\\s+M-PESA cannot send Ksh([,|.|\\d]+) to 2547[\\d]{8}. " +
 			"For more information call or SMS customer services on \\d+";
 	private static final String OUTGOING_PAYMENT_INSUFFICIENT_FUNDS_REGEX  =
-			"Failed. \nNot enough money in your M-PESA account to send Ksh[,|.|\\d]+.00. " +
+			"Failed.\\s+Not enough money in your M-PESA account to send Ksh[,|.|\\d]+.00. " +
 			"You must be able to pay the transaction fee as well as the requested " +
-			"amount.\nYour M-PESA balance is Ksh[,|.|\\d]+.00";
+			"amount.\\s+Your M-PESA balance is Ksh[,|.|\\d]+.00";
 	
 	private static final String OUTGOING_PAYMENT_INACTIVE_PAYBILL_REGEX  =
 		"Failed. M-PESA cannot  pay Ksh[,|.|\\d]+.00 " +
 		"to ([A-Za-z ]+).";
 	
 	private static final String OUTGOING_PAYMENT_UNREGISTERED_USER_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ " +
-	"sent to (\\+254[\\d]{9}|[\\d|-]) on " +
-	"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )" +
+	"sent to (\\+254[\\d]{9}|[\\d|-])\\s+on\\s+" +
+	"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d)) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\s+)" +
 	"New M-PESA balance is Ksh([,|.|\\d]+)";
 	
 	private static final String OUTGOING_PAYMENT_PAYBILL_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ " +
 			"sent to ([A-Za-z ]+) for account ([\\d]+) on " +
-			"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )" +
+			"(([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d)) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\s+)" +
 			"New M-PESA balance is Ksh([,|.|\\d]+)";
 	
 	private static final String MPESA_PAYMENT_FAILURE_REGEX = "";
 	private static final String LESS_THAN_MINIMUM_AMOUNT = "Failed. The amount is less than minimum M-PESA money transfer value.";
 	private static final String OUTGOING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ "
 			+ "sent to ([A-Za-z ]+) (\\+254[\\d]{9}|[\\d|-])+ "
-			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\n| )"
+			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d)) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\s+)"
 			+ "New M-PESA balance is Ksh([,|.|\\d]+)";
 	private static final String BALANCE_REGEX = "(?s)[A-Z0-9]+ Confirmed.\\s*"
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\\s*"
-			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(1[0-2])) at\\s*(([1]?\\d:[0-5]\\d) ([A|P]M)).*";
+			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d)) at\\s*(([1]?\\d:[0-5]\\d) ([A|P]M)).*";
 
 //> STATIC CONSTANTS
 	/**
@@ -468,8 +468,8 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	String getPaymentBy(FrontlineMessage message) {
 		try {
 			String nameAndPhone = getFirstMatch(message,
-					"Ksh[,|.|\\d]+ from\n([A-Za-z ]+) 2547[0-9]{8}");
-			String nameWKsh = nameAndPhone.split((AMOUNT_PATTERN + " from\n"))[1];
+					"Ksh[,|.|\\d]+\\s+from\\s+([A-Za-z ]+)\\s+2547[0-9]{8}");
+			String nameWKsh = nameAndPhone.split((AMOUNT_PATTERN + "\\s+from\\s+"))[1];
 			String names = getFirstMatch(nameWKsh, PAID_BY_PATTERN).trim();
 			return names;
 		} catch (ArrayIndexOutOfBoundsException ex) {
