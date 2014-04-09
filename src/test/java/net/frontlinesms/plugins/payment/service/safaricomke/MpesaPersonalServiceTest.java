@@ -104,6 +104,28 @@ public class MpesaPersonalServiceTest extends
 				"22/5/11 10:35 PM", OutgoingPayment.Status.UNCONFIRMED);
 	}
 
+	public void testOutgoingPaymentProcessingWithDecimalBalance() throws DuplicateKeyException {
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("2265"));
+
+		testOutgoingPaymentProcessing(
+				"BC77RI604 Confirmed. "
+						+ "Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM "
+						+ "New M-PESA balance is Ksh1,234.00", PHONENUMBER_1,
+				ACCOUNTNUMBER_1_1, "1235", "BC77RI604", "DACON OMONDI",
+				"22/5/11 10:35 PM", OutgoingPayment.Status.UNCONFIRMED);
+	}
+
+	public void testOutgoingPaymentProcessingWithTrailingAdvertisement() throws DuplicateKeyException {
+		mpesaPaymentService.setBalanceAmount(new BigDecimal("2265"));
+
+		testOutgoingPaymentProcessing(
+				"BC77RI604 Confirmed. "
+						+ "Ksh1,235 sent to DACON OMONDI +254723908001 on 22/5/11 at 10:35 PM "
+						+ "New M-PESA balance is Ksh1,234.00.PIN YAKO SIRI YAKO", PHONENUMBER_1,
+				ACCOUNTNUMBER_1_1, "1235", "BC77RI604", "DACON OMONDI",
+				"22/5/11 10:35 PM", OutgoingPayment.Status.UNCONFIRMED);
+	}
+
 	public void testIncomingPaymentProcessingWithNoAccount() {
 		testIncomingPaymentProcessorIgnoresMessage(
 				"+254721656788",

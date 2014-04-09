@@ -63,7 +63,7 @@ public class MpesaPersonalService extends MpesaPaymentService {
 	private static final String OUTGOING_PAYMENT_REGEX = "[A-Z0-9]+ Confirmed. Ksh[,|.|\\d]+ "
 			+ "sent to ([A-Za-z ]+) (\\+254[\\d]{9}|[\\d|-])+ "
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d)) at ([1]?\\d:[0-5]\\d) ([A|P]M)(\\s+)"
-			+ "New M-PESA balance is Ksh([,|.|\\d]+)";
+			+ "New M-PESA balance is Ksh([,|\\d]+(\\.[\\d]{2})?).*";
 	private static final String BALANCE_REGEX = "(?s)[A-Z0-9]+ Confirmed.\\s*"
 			+ "Your M-PESA balance was Ksh([,|.|\\d]+)\\s*"
 			+ "on (([1-2]?[1-9]|[1-2]0|3[0-1])/([1-9]|1[0-2])/(\\d\\d)) at\\s*(([1]?\\d:[0-5]\\d) ([A|P]M)).*";
